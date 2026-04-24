@@ -40,7 +40,7 @@ app.post('/api/analyze-image', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -86,7 +86,7 @@ app.post('/api/check-message', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -128,7 +128,7 @@ app.post('/api/chat', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1000,
         messages: messages,
         system: 'You are a patient, kind AI assistant helping elderly people with technology and daily tasks. Use very simple language, be warm and reassuring, and avoid jargon. Keep responses concise and actionable (2-4 short sentences). If they seem confused, offer to help them call a family member or guide them step by step. Never use technical terms without explaining them simply.'
