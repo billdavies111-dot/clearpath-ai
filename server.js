@@ -5,16 +5,15 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ⚠️ PUT YOUR API KEY HERE
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || 'YOUR_API_KEY_HERE';
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
-   
-   app.get('/', (req, res) => {
-     res.sendFile(__dirname + '/index.html');
-   });
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
 
 // Analyze image endpoint
 app.post('/api/analyze-image', async (req, res) => {
@@ -74,17 +73,6 @@ app.post('/api/analyze-image', async (req, res) => {
   }
 });
 
-    const data = await response.json();
-   console.log('Full API response:', JSON.stringify(data, null, 2));
-const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this document.';
-     
-    res.json({ response: aiResponse });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Failed to analyze image' });
-  }
-});
-
 // Check message endpoint
 app.post('/api/check-message', async (req, res) => {
   try {
@@ -98,7 +86,7 @@ app.post('/api/check-message', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20241022',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -140,7 +128,7 @@ app.post('/api/chat', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20241022',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1000,
         messages: messages,
         system: 'You are a patient, kind AI assistant helping elderly people with technology and daily tasks. Use very simple language, be warm and reassuring, and avoid jargon. Keep responses concise and actionable (2-4 short sentences). If they seem confused, offer to help them call a family member or guide them step by step. Never use technical terms without explaining them simply.'
