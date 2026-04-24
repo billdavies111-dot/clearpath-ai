@@ -10,7 +10,11 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || 'YOUR_API_KEY_HERE';
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static('.'));
+app.use(express.static(__dirname));
+   
+   app.get('/', (req, res) => {
+     res.sendFile(__dirname + '/index.html');
+   });
 
 // Analyze image endpoint
 app.post('/api/analyze-image', async (req, res) => {
