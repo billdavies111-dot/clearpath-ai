@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClearPath AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            min-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .greeting {
+            font-size: 20px;
+            opacity: 0.95;
+        }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 16px;
+            padding: 24px;
+            font-size: 22px;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-icon {
+            font-size: 32px;
+        }
+
+        .bottom-buttons {
+            margin-top: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            color: #495057;
+            padding: 18px;
+            font-size: 18px;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+            color: #495057;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .back-button {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 12px 0;
+            cursor: pointer;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .camera-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 4/3;
+            background: #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .camera-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-label {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-label:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 12px;
+        }
+
+        .result-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .risk-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .risk-safe {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .risk-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .risk-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn-action {
+            padding: 16px;
+            font-size: 18px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            font-size: 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            resize: vertical;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+
+        .voice-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .mic-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #667eea;
+            border: none;
+            color: white;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .mic-button:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .mic-button.listening {
+            background: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .voice-text {
+            font-size: 20px;
+            color: #495057;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .conversation {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .message-user {
+            background: #e3f2fd;
+            color: #1565c0;
+            margin-left: 40px;
+        }
+
+        .message-ai {
+            background: #f8f9fa;
+            color: #212529;
+            margin-right: 40px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .family-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .family-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .family-card:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .family-icon {
+            font-size: 40px;
+        }
+
+        .family-info {
+            flex: 1;
+        }
+
+        .family-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+
+        .family-relation {
+            font-size: 16px;
+            color: #6c757d;
+        }
+
+        .reminder-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .reminder-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .reminder-time {
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 12px;
+        }
+
+        .reminder-done {
+            background: transparent;
+            border: 2px solid #28a745;
+            color: #28a745;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .reminder-done:hover {
+            background: #28a745;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ClearPath AI</h1>
+            <div class="greeting">Hi <span id="userName">there</span>, how can I help today?</div>
+        </div>
+
+        <div class="content">
+            <!-- Home Screen -->
+            <div class="screen active" id="homeScreen">
+                <div class="main-buttons">
+                    <button class="btn" onclick="showScreen('scanScreen')">
+                        <span class="btn-icon">📷</span>
+                        <span>Scan Something</span>
+                    </button>
+                    <button class="btn" onclick="showScreen('voiceScreen')">
+                        <span class="btn-icon">🎙️</span>
+                        <span>Ask a Question</span>
+                    </button>
+                    <button class="btn" onclick="showScreen('checkScreen')">
+                        <span class="btn-icon">⚠️</span>
+                        <span>Check a Message</span>
+                    </button>
+                </div>
+
+                <div class="bottom-buttons">
+                    <button class="btn btn-secondary" onclick="showScreen('familyScreen')">
+                        <span class="btn-icon">📞</span>
+                        <span>Call Family</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="showScreen('remindersScreen')">
+                        <span class="btn-icon">🔔</span>
+                        <span>Reminders</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scan Screen -->
+            <div class="screen" id="scanScreen">
+                <button class="back-button" onclick="resetScan()">← Back</button>
+                <div class="camera-container">
+                    <div class="camera-preview" id="imagePreview"></div>
+                    <label class="upload-label">
+                        Take Picture
+                        <input type="file" accept="image/*" capture="environment" onchange="handleImageUpload(event)">
+                    </label>
+                </div>
+                <div id="scanResult"></div>
+            </div>
+
+            <!-- Check Message Screen -->
+            <div class="screen" id="checkScreen">
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <h2 style="font-size: 24px; margin-bottom: 16px;">Paste or type the message:</h2>
+                <textarea id="messageInput" placeholder="Paste the message here..."></textarea>
+                <button class="btn" onclick="checkMessage()">Check This Message</button>
+                <div id="checkResult"></div>
+            </div>
+
+            <!-- Voice Screen -->
+            <div class="screen" id="voiceScreen">
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <div class="conversation" id="conversation"></div>
+                <div class="voice-container">
+                    <button class="mic-button" id="micButton" onclick="toggleVoice()">🎤</button>
+                    <div class="voice-text" id="voiceText">Tap to ask a question</div>
+                </div>
+                <textarea id="textInput" placeholder="Or type your question here..." style="margin-top: 20px;"></textarea>
+                <button class="btn" onclick="sendTextQuestion()">Send Question</button>
+            </div>
+
+            <!-- Family Screen -->
+            <div class="screen" id="familyScreen">
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Call Family</h2>
+                <div class="family-list">
+                    <div class="family-card" onclick="callFamily('Sarah')">
+                        <span class="family-icon">👧</span>
+                        <div class="family-info">
+                            <div class="family-name">Sarah</div>
+                            <div class="family-relation">Daughter</div>
+                        </div>
+                        <span style="font-size: 24px;">📞</span>
+                    </div>
+                    <div class="family-card" onclick="callFamily('Michael')">
+                        <span class="family-icon">👦</span>
+                        <div class="family-info">
+                            <div class="family-name">Michael</div>
+                            <div class="family-relation">Son</div>
+                        </div>
+                        <span style="font-size: 24px;">📞</span>
+                    </div>
+                    <div class="family-card" onclick="callFamily('Emergency')">
+                        <span class="family-icon">🚨</span>
+                        <div class="family-info">
+                            <div class="family-name">Emergency Contact</div>
+                            <div class="family-relation">911</div>
+                        </div>
+                        <span style="font-size: 24px;">📞</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminders Screen -->
+            <div class="screen" id="remindersScreen">
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Your Reminders</h2>
+                <div id="remindersList">
+                    <div class="reminder-card">
+                        <div class="reminder-title">Take morning medication</div>
+                        <div class="reminder-time">Today at 9:00 AM</div>
+                        <button class="reminder-done" onclick="markReminderDone(this)">✓ Mark as Done</button>
+                    </div>
+                    <div class="reminder-card">
+                        <div class="reminder-title">Doctor appointment</div>
+                        <div class="reminder-time">Tomorrow at 2:30 PM</div>
+                        <button class="reminder-done" onclick="markReminderDone(this)">✓ Mark as Done</button>
+                    </div>
+                    <div class="reminder-card">
+                        <div class="reminder-title">Call Sarah back</div>
+                        <div class="reminder-time">Today at 3:00 PM</div>
+                        <button class="reminder-done" onclick="markReminderDone(this)">✓ Mark as Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationHistory = [];
+        let isListening = false;
+        let recognition = null;
+
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                addMessage(transcript, 'user');
+                getAIResponse(transcript);
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById('micButton').classList.remove('listening');
+                document.getElementById('voiceText').textContent = 'Tap to ask a question';
+            };
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Scanned document">`;
+                analyzeImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeImage(imageData) {
+            const resultDiv = document.getElementById('scanResult');
+            resultDiv.innerHTML = '<div class="loading">Analyzing your document...</div>';
+
+            try {
+                const response = await fetch('/api/analyze-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: imageData.split(',')[1]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.response || 'I had trouble reading this document.';
+
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">Here's what I found:</div>
+                        <div class="result-text">${aiResponse.replace(/\n/g, '<br><br>')}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="resetScan()">✓ Got it</button>
+                        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
+                        <button class="btn btn-action" onclick="askFollowUp()">❓ Ask a question about this</button>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('API Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">Something went wrong</div>
+                        <div class="result-text">I'm having trouble analyzing this right now. Please try again, or you can call a family member for help.</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="resetScan()">Try Again</button>
+                        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call Family</button>
+                    </div>
+                `;
+            }
+        }
+
+        function resetScan() {
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('scanResult').innerHTML = '';
+            showScreen('homeScreen');
+        }
+
+        function askFollowUp() {
+            showScreen('voiceScreen');
+            addMessage("I have a question about the document I just scanned", 'user');
+        }
+
+        async function checkMessage() {
+            const message = document.getElementById('messageInput').value.trim();
+            if (!message) {
+                alert('Please paste or type a message first.');
+                return;
+            }
+
+            const resultDiv = document.getElementById('checkResult');
+            resultDiv.innerHTML = '<div class="loading">Checking this message...</div>';
+
+            try {
+                const response = await fetch('/api/check-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.response || '';
+
+                let riskClass = 'risk-warning';
+                let riskText = '🟡 This might be suspicious';
+                
+                if (aiResponse.toUpperCase().includes('SAFE') && !aiResponse.toLowerCase().includes('not safe')) {
+                    riskClass = 'risk-safe';
+                    riskText = '🟢 This looks safe';
+                } else if (aiResponse.toUpperCase().includes('SCAM')) {
+                    riskClass = 'risk-danger';
+                    riskText = '🔴 This looks like a scam';
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="risk-indicator ${riskClass}">${riskText}</div>
+                        <div class="result-text">${aiResponse.replace(/\n/g, '<br><br>')}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="resetMessageCheck()">Check Another Message</button>
+                        ${riskClass !== 'risk-safe' ? '<button class="btn btn-action" onclick="showScreen(\'familyScreen\')">📞 Call family about this</button>' : ''}
+                        <button class="btn btn-action" onclick="showScreen('homeScreen')">Done</button>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('API Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">Something went wrong</div>
+                        <div class="result-text">I'm having trouble checking this message right now. When in doubt, it's always safer to check with a family member before responding to suspicious messages.</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call Family</button>
+                        <button class="btn btn-action" onclick="showScreen('homeScreen')">Done</button>
+                    </div>
+                `;
+            }
+        }
+
+        function resetMessageCheck() {
+            document.getElementById('messageInput').value = '';
+            document.getElementById('checkResult').innerHTML = '';
+        }
+
+        function toggleVoice() {
+            if (!recognition) {
+                alert('Voice recognition is not supported in this browser. Please type your question instead, or use Chrome/Safari for voice support.');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isListening = true;
+                document.getElementById('micButton').classList.add('listening');
+                document.getElementById('voiceText').textContent = 'Listening...';
+            }
+        }
+
+        async function sendTextQuestion() {
+            const question = document.getElementById('textInput').value.trim();
+            if (!question) {
+                alert('Please type a question first.');
+                return;
+            }
+
+            document.getElementById('textInput').value = '';
+            addMessage(question, 'user');
+            await getAIResponse(question);
+        }
+
+        function addMessage(text, type) {
+            const conversation = document.getElementById('conversation');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+            messageDiv.textContent = text;
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+
+            if (type === 'user') {
+                conversationHistory.push({ role: 'user', content: text });
+            } else {
+                conversationHistory.push({ role: 'assistant', content: text });
+            }
+        }
+
+        async function getAIResponse(userMessage) {
+            const conversation = document.getElementById('conversation');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.textContent = 'Thinking...';
+            conversation.appendChild(loadingDiv);
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.response || 'I\'m here to help. Can you tell me more?';
+
+                loadingDiv.remove();
+                addMessage(aiResponse, 'ai');
+            } catch (error) {
+                console.error('API Error:', error);
+                loadingDiv.remove();
+                addMessage('I\'m having trouble right now. Can you try asking again, or would you like to call someone for help?', 'ai');
+            }
+        }
+
+        function callFamily(name) {
+            if (confirm(`Call ${name}?`)) {
+                alert(`In a real version, this would dial ${name}'s phone number.`);
+            }
+        }
+
+        function markReminderDone(button) {
+            const card = button.closest('.reminder-card');
+            card.style.opacity = '0.5';
+            button.textContent = '✓ Done';
+            button.disabled = true;
+            button.style.background = '#28a745';
+            button.style.color = 'white';
+            button.style.cursor = 'default';
+        }
+
+        document.getElementById('userName').textContent = 'there';
+    </script>
+</body>
+</html>
