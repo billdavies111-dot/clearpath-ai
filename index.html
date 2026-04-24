@@ -581,18 +581,22 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+       function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
-                preview.innerHTML = `<img src="${e.target.result}" alt="Scanned document">`;
-                analyzeImage(e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `<img src="${e.target.result}" alt="Scanned document">`;
+        
+        // Hide the upload button
+        document.querySelector('.upload-label').style.display = 'none';
+        
+        analyzeImage(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
 
         async function analyzeImage(imageData) {
             const resultDiv = document.getElementById('scanResult');
@@ -616,7 +620,7 @@
     <div style="margin-bottom: 20px;">
         <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
         <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 12px;">
-            <div style="font-size: 22px; line-height: 1.8; color: #212529; font-weight: 500;">${aiResponse.replace(/\n/g, '<br><br>')}</div>
+            <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${aiResponse.replace(/\n/g, '<br>')}</div>
         </div>
         <div style="font-size: 16px; color: #6c757d; margin-bottom: 20px; padding: 0 4px;">
             This does not appear urgent.<br>
@@ -647,6 +651,7 @@
         function resetScan() {
             document.getElementById('imagePreview').innerHTML = '';
             document.getElementById('scanResult').innerHTML = '';
+             document.querySelector('.upload-label').style.display = 'inline-block';
             showScreen('homeScreen');
         }
 
