@@ -20,6 +20,18 @@ app.use(express.static(__dirname));
 app.post('/api/analyze-image', async (req, res) => {
   try {
     const { image } = req.body;
+    
+    // Detect image type from base64 header
+    let mediaType = 'image/jpeg';
+    if (image.startsWith('iVBORw0KGgo')) {
+      mediaType = 'image/png';
+    } else if (image.startsWith('/9j/')) {
+      mediaType = 'image/jpeg';
+    } else if (image.startsWith('R0lGOD')) {
+      mediaType = 'image/gif';
+    } else if (image.startsWith('UklGR')) {
+      mediaType = 'image/webp';
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -29,7 +41,7 @@ app.post('/api/analyze-image', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20241022',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -38,7 +50,7 @@ app.post('/api/analyze-image', async (req, res) => {
               type: 'image',
               source: {
                 type: 'base64',
-                media_type: 'image/jpeg',
+                media_type: mediaType,
                 data: image
               }
             },
@@ -50,6 +62,17 @@ app.post('/api/analyze-image', async (req, res) => {
         }]
       })
     });
+
+    const data = await response.json();
+    console.log('Full API response:', JSON.stringify(data, null, 2));
+    const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this document.';
+
+    res.json({ response: aiResponse });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Failed to analyze image' });
+  }
+});
 
     const data = await response.json();
    console.log('Full API response:', JSON.stringify(data, null, 2));
