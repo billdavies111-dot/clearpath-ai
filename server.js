@@ -55,7 +55,7 @@ app.post('/api/analyze-image', async (req, res) => {
             },
             {
               type: 'text',
-              text: 'You are helping an elderly person understand this document. Analyze it and provide:\n\n1. What type of document this is (in very simple terms)\n2. The key information they need to know\n3. What action (if any) they need to take\n4. Whether it appears safe/legitimate\n\nUse very simple, clear language. Be warm and reassuring. Keep your response concise - use short paragraphs with line breaks between key points.'
+              text: 'You are helping an elderly person understand this document. Be EXTREMELY concise.\n\nProvide exactly 3 lines:\n1. What it is (one sentence, max 10 words)\n2. Key number/action (one sentence, max 10 words)  \n3. When/urgency (one sentence, max 10 words)\n\nExample format:\nThis is a medical bill.\nYou owe $182.\nIt is due May 5.\n\nBe direct. Use simple words. No extra explanation.'
             }
           ]
         }]
