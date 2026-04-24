@@ -612,17 +612,23 @@
                 const data = await response.json();
                 const aiResponse = data.response || 'I had trouble reading this document.';
 
-                resultDiv.innerHTML = `
-                    <div class="result-card">
-                        <div class="result-title">Here's what I found:</div>
-                        <div class="result-text">${aiResponse.replace(/\n/g, '<br><br>')}</div>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-action" onclick="resetScan()">✓ Got it</button>
-                        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
-                        <button class="btn btn-action" onclick="askFollowUp()">❓ Ask a question about this</button>
-                    </div>
-                `;
+               resultDiv.innerHTML = `
+    <div style="margin-bottom: 20px;">
+        <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
+        <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 12px;">
+            <div style="font-size: 22px; line-height: 1.8; color: #212529; font-weight: 500;">${aiResponse.replace(/\n/g, '<br><br>')}</div>
+        </div>
+        <div style="font-size: 16px; color: #6c757d; margin-bottom: 20px; padding: 0 4px;">
+            This does not appear urgent.<br>
+            You have time to review it.
+        </div>
+    </div>
+    <div class="action-buttons">
+        <button class="btn btn-action" onclick="resetScan()">✓ I understand</button>
+        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
+        <button class="btn btn-action" onclick="explainMore()">❓ Explain more</button>
+    </div>
+`;
             } catch (error) {
                 console.error('API Error:', error);
                 resultDiv.innerHTML = `
@@ -804,6 +810,9 @@
             button.style.cursor = 'default';
         }
 
+        function explainMore() {
+    alert('More detailed explanation feature coming soon! For now, you can call a family member to discuss this document.');
+}
         document.getElementById('userName').textContent = 'there';
     </script>
 </body>
