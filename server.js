@@ -52,8 +52,9 @@ app.post('/api/analyze-image', async (req, res) => {
     });
 
     const data = await response.json();
-    const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this document.';
-
+   console.log('Full API response:', JSON.stringify(data, null, 2));
+const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this document.';
+     
     res.json({ response: aiResponse });
   } catch (error) {
     console.error('Error:', error);
