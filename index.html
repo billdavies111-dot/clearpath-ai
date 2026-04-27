@@ -254,6 +254,79 @@
             margin-bottom: 8px;
         }
 
+        .scam-detection-box {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 3px solid #dee2e6;
+        }
+
+        .scam-score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .scam-score-safe {
+            background: #d4edda;
+            color: #155724;
+            border: 3px solid #28a745;
+        }
+
+        .scam-score-maybe {
+            background: #fff3cd;
+            color: #856404;
+            border: 3px solid #ffc107;
+        }
+
+        .scam-score-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 3px solid #dc3545;
+        }
+
+        .detection-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .detection-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .detection-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detection-value {
+            font-size: 20px;
+            line-height: 1.5;
+            color: #212529;
+            font-weight: 600;
+        }
+
+        .detection-explanation {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #495057;
+            margin-top: 8px;
+        }
+
         .risk-indicator {
             display: inline-block;
             padding: 8px 16px;
@@ -965,7 +1038,6 @@
         }
 
         function testVoice() {
-            // Make sure voices are loaded
             const voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
                 setTimeout(() => {
@@ -1403,21 +1475,51 @@
                 });
 
                 const data = await response.json();
-                const aiResponse = data.response || 'I had trouble reading this document.';
+                const summary = data.summary || 'I had trouble reading this document.';
+                const scamScore = data.scamScore || 'PROBABLY NOT';
+                const needAction = data.needAction || 'No';
+                const ifIgnored = data.ifIgnored || 'Nothing urgent will happen.';
 
-                speak(aiResponse.replace(/<[^>]*>/g, ''));
+                // Determine scam score class
+                let scamClass = 'scam-score-safe';
+                let scamIcon = '✅';
+                if (scamScore === 'MAYBE') {
+                    scamClass = 'scam-score-maybe';
+                    scamIcon = '⚠️';
+                } else if (scamScore === 'PROBABLY') {
+                    scamClass = 'scam-score-danger';
+                    scamIcon = '🚨';
+                }
+
+                speak(summary.replace(/<[^>]*>/g, ''));
 
                 resultDiv.innerHTML = `
                     <div style="margin-bottom: 20px;">
                         <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
-                        <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 12px;">
-                            <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${aiResponse.replace(/\n/g, '<br>')}</div>
-                        </div>
-                        <div style="font-size: 16px; color: #6c757d; margin-bottom: 20px; padding: 0 4px;">
-                            This does not appear urgent.<br>
-                            You have time to review it.
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 16px;">
+                            <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${summary.replace(/\n/g, '<br>')}</div>
                         </div>
                     </div>
+
+                    <div class="scam-detection-box">
+                        <div style="font-size: 20px; font-weight: 700; color: #212529; margin-bottom: 20px; text-align: center;">Safety Check</div>
+                        
+                        <div class="scam-score ${scamClass}">
+                            <span style="font-size: 28px;">${scamIcon}</span>
+                            <span>Scam Risk: ${scamScore}</span>
+                        </div>
+
+                        <div class="detection-item">
+                            <div class="detection-label">Do I need to act?</div>
+                            <div class="detection-value">${needAction}</div>
+                        </div>
+
+                        <div class="detection-item">
+                            <div class="detection-label">What happens if I ignore this?</div>
+                            <div class="detection-explanation">${ifIgnored}</div>
+                        </div>
+                    </div>
+
                     <div class="action-buttons">
                         <button class="btn btn-action" onclick="resetScan()">✓ I understand</button>
                         <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
@@ -1546,7 +1648,6 @@
             conversation.appendChild(loadingDiv);
 
             try {
-                // Get user's name for personalization
                 const userName = localStorage.getItem('userName') || '';
                 
                 const response = await fetch('/api/chat', {
