@@ -35,7 +35,19 @@ app.post('/api/analyze-image', async (req, res) => {
     // Different prompts for basic vs detailed
     const prompt = detailed 
       ? 'You are helping an elderly person understand this document in detail. Provide a comprehensive explanation (300-500 words) that includes:\n\n1. What type of document this is and its purpose\n2. All key information, numbers, dates, and details present\n3. What actions they need to take (if any) with specific deadlines\n4. Any important terms or conditions explained in simple language\n5. Whether there are any concerns or red flags\n6. Whether it appears legitimate and safe\n7. Additional context that would be helpful\n\nUse very simple, clear language. Be thorough but conversational. Break down complex terms. Organize your response in clear paragraphs.'
-      : 'You are helping an elderly person understand this document. Be EXTREMELY concise.\n\nProvide exactly 3 lines:\n1. What it is (one sentence, max 10 words)\n2. Key number/action (one sentence, max 10 words)\n3. When/urgency (one sentence, max 10 words)\n\nExample format:\nThis is a medical bill.\nYou owe $182.\nIt is due May 5.\n\nBe direct. Use simple words. No extra explanation.';
+      : `You are helping an elderly person understand this document. Analyze it for scam risk and provide a structured response.
+
+Return your response in this EXACT format:
+
+SUMMARY: [2-3 sentences: what it is, key number, when/urgency]
+
+SCAM_SCORE: [EXACTLY one of: "PROBABLY NOT" or "MAYBE" or "PROBABLY"]
+
+NEED_ACTION: [EXACTLY one of: "Yes" or "No" or "Soon"]
+
+IF_IGNORED: [1-2 sentences about what happens if they don't respond]
+
+Be direct. Use simple words.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -71,13 +83,40 @@ app.post('/api/analyze-image', async (req, res) => {
     console.log('Full API response:', JSON.stringify(data, null, 2));
     const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this document.';
 
-    res.json({ response: aiResponse });
+    if (detailed) {
+      res.json({ response: aiResponse });
+    } else {
+      // Parse the structured response
+      const lines = aiResponse.split('\n').filter(line => line.trim());
+      let summary = '';
+      let scamScore = 'PROBABLY NOT';
+      let needAction = 'No';
+      let ifIgnored = 'Nothing urgent will happen.';
+
+      lines.forEach(line => {
+        if (line.startsWith('SUMMARY:')) {
+          summary = line.replace('SUMMARY:', '').trim();
+        } else if (line.startsWith('SCAM_SCORE:')) {
+          scamScore = line.replace('SCAM_SCORE:', '').trim();
+        } else if (line.startsWith('NEED_ACTION:')) {
+          needAction = line.replace('NEED_ACTION:', '').trim();
+        } else if (line.startsWith('IF_IGNORED:')) {
+          ifIgnored = line.replace('IF_IGNORED:', '').trim();
+        }
+      });
+
+      res.json({ 
+        summary,
+        scamScore,
+        needAction,
+        ifIgnored
+      });
+    }
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Failed to analyze image' });
   }
 });
-
 // Check message endpoint
 app.post('/api/check-message', async (req, res) => {
   try {
