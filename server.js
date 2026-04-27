@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 // Analyze image endpoint
 app.post('/api/analyze-image', async (req, res) => {
   try {
-    const { image } = req.body;
+    const { image, detailed } = req.body;
     
     // Detect image type from base64 header
     let mediaType = 'image/jpeg';
@@ -32,6 +32,11 @@ app.post('/api/analyze-image', async (req, res) => {
       mediaType = 'image/webp';
     }
 
+    // Different prompts for basic vs detailed
+    const prompt = detailed 
+      ? 'You are helping an elderly person understand this document in detail. Provide a comprehensive explanation (300-500 words) that includes:\n\n1. What type of document this is and its purpose\n2. All key information, numbers, dates, and details present\n3. What actions they need to take (if any) with specific deadlines\n4. Any important terms or conditions explained in simple language\n5. Whether there are any concerns or red flags\n6. Whether it appears legitimate and safe\n7. Additional context that would be helpful\n\nUse very simple, clear language. Be thorough but conversational. Break down complex terms. Organize your response in clear paragraphs.'
+      : 'You are helping an elderly person understand this document. Be EXTREMELY concise.\n\nProvide exactly 3 lines:\n1. What it is (one sentence, max 10 words)\n2. Key number/action (one sentence, max 10 words)\n3. When/urgency (one sentence, max 10 words)\n\nExample format:\nThis is a medical bill.\nYou owe $182.\nIt is due May 5.\n\nBe direct. Use simple words. No extra explanation.';
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -41,7 +46,7 @@ app.post('/api/analyze-image', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
+        max_tokens: detailed ? 2000 : 1000,
         messages: [{
           role: 'user',
           content: [
@@ -55,7 +60,7 @@ app.post('/api/analyze-image', async (req, res) => {
             },
             {
               type: 'text',
-              text: 'You are helping an elderly person understand this document. Be EXTREMELY concise.\n\nProvide exactly 3 lines:\n1. What it is (one sentence, max 10 words)\n2. Key number/action (one sentence, max 10 words)  \n3. When/urgency (one sentence, max 10 words)\n\nExample format:\nThis is a medical bill.\nYou owe $182.\nIt is due May 5.\n\nBe direct. Use simple words. No extra explanation.'
+              text: prompt
             }
           ]
         }]
