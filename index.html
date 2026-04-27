@@ -1025,6 +1025,153 @@
             button.style.color = 'white';
             button.style.cursor = 'default';
         }
+        // Settings & Personalization Functions
+
+// Load saved settings on page load
+window.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    loadContacts();
+    displayContacts();
+});
+
+function loadSettings() {
+    // Load user name
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+        document.getElementById('userName').textContent = savedName;
+        document.getElementById('userNameInput').value = savedName;
+    }
+    
+    // Load voice settings
+    const voiceGender = localStorage.getItem('voiceGender') || 'female';
+    document.querySelector(`input[name="voiceGender"][value="${voiceGender}"]`).checked = true;
+    
+    const voiceSpeed = localStorage.getItem('voiceSpeed') || '1.3';
+    document.getElementById('voiceSpeed').value = voiceSpeed;
+}
+
+function saveName() {
+    const name = document.getElementById('userNameInput').value.trim();
+    if (!name) {
+        alert('Please enter your name');
+        return;
+    }
+    
+    localStorage.setItem('userName', name);
+    document.getElementById('userName').textContent = name;
+    alert('Name saved! The app will now greet you by name.');
+}
+
+function saveVoiceSettings() {
+    const gender = document.querySelector('input[name="voiceGender"]:checked').value;
+    const speed = document.getElementById('voiceSpeed').value;
+    
+    localStorage.setItem('voiceGender', gender);
+    localStorage.setItem('voiceSpeed', speed);
+    
+    alert('Voice settings saved!');
+}
+
+// Contact Management
+let familyContacts = [];
+
+function loadContacts() {
+    const saved = localStorage.getItem('familyContacts');
+    if (saved) {
+        familyContacts = JSON.parse(saved);
+    } else {
+        // Default contacts
+        familyContacts = [
+            { name: 'Sarah', relation: 'Daughter', phone: '' },
+            { name: 'Michael', relation: 'Son', phone: '' },
+            { name: 'Emergency', relation: '911', phone: '911' }
+        ];
+    }
+}
+
+function saveContacts() {
+    localStorage.setItem('familyContacts', JSON.stringify(familyContacts));
+    displayContacts();
+    updateFamilyScreen();
+}
+
+function addContact() {
+    const name = document.getElementById('newContactName').value.trim();
+    const relation = document.getElementById('newContactRelation').value.trim();
+    const phone = document.getElementById('newContactPhone').value.trim();
+    
+    if (!name || !phone) {
+        alert('Please enter at least a name and phone number');
+        return;
+    }
+    
+    familyContacts.push({ name, relation, phone });
+    saveContacts();
+    
+    // Clear inputs
+    document.getElementById('newContactName').value = '';
+    document.getElementById('newContactRelation').value = '';
+    document.getElementById('newContactPhone').value = '';
+    
+    alert('Contact added!');
+}
+
+function deleteContact(index) {
+    if (confirm('Delete this contact?')) {
+        familyContacts.splice(index, 1);
+        saveContacts();
+    }
+}
+
+function displayContacts() {
+    const list = document.getElementById('contactsList');
+    if (!list) return;
+    
+    if (familyContacts.length === 0) {
+        list.innerHTML = '<p style="color: #6c757d; font-size: 16px;">No contacts yet. Add one below!</p>';
+        return;
+    }
+    
+    list.innerHTML = familyContacts.map((contact, index) => `
+        <div style="background: white; border: 2px solid #dee2e6; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 18px; font-weight: 600; color: #212529;">${contact.name}</div>
+                <div style="font-size: 16px; color: #6c757d;">${contact.relation}</div>
+                <div style="font-size: 16px; color: #495057; margin-top: 4px;">${contact.phone}</div>
+            </div>
+            <button onclick="deleteContact(${index})" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 16px;">Delete</button>
+        </div>
+    `).join('');
+}
+
+function updateFamilyScreen() {
+    const familyList = document.querySelector('.family-list');
+    if (!familyList) return;
+    
+    familyList.innerHTML = familyContacts.map(contact => `
+        <div class="family-card" onclick="callFamily('${contact.name}', '${contact.phone}')">
+            <span class="family-icon">${contact.name === 'Emergency' ? '🚨' : (contact.relation.toLowerCase().includes('daughter') ? '👧' : '👦')}</span>
+            <div class="family-info">
+                <div class="family-name">${contact.name}</div>
+                <div class="family-relation">${contact.relation}</div>
+            </div>
+            <span style="font-size: 24px;">📞</span>
+        </div>
+    `).join('');
+}
+
+// Update callFamily function to actually dial
+function callFamily(name, phone) {
+    if (!phone) {
+        alert(`No phone number saved for ${name}. Please add one in Settings.`);
+        return;
+    }
+    
+    if (confirm(`Call ${name}?`)) {
+        // Open phone dialer
+        window.location.href = `tel:${phone}`;
+    }
+}
     </script>
 </body>
 </html>
