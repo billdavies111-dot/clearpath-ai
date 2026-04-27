@@ -123,7 +123,12 @@ Message to analyze:
 // Chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, userName } = req.body;
+    
+    // Add system message with user's name
+    const systemMessage = userName 
+      ? `You are ClearPath AI, a helpful assistant for elderly users. The user's name is ${userName}. Address them by name when appropriate. Be warm, patient, and use simple language.`
+      : 'You are ClearPath AI, a helpful assistant for elderly users. Be warm, patient, and use simple language.';
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -135,8 +140,8 @@ app.post('/api/chat', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 1000,
-        messages: messages,
-        system: 'You are a patient, kind AI assistant helping elderly people with technology and daily tasks. Use very simple language, be warm and reassuring, and avoid jargon. Keep responses concise and actionable (2-4 short sentences). If they seem confused, offer to help them call a family member or guide them step by step. Never use technical terms without explaining them simply.'
+        system: systemMessage,
+        messages: messages
       })
     });
 
