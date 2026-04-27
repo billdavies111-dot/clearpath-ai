@@ -58,16 +58,17 @@
         .main-buttons {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
             margin-bottom: 24px;
+            flex: 1;
         }
 
         .btn {
             background: white;
             border: 3px solid #667eea;
             border-radius: 16px;
-            padding: 24px;
-            font-size: 22px;
+            padding: 32px;
+            font-size: 24px;
             font-weight: 600;
             color: #667eea;
             cursor: pointer;
@@ -77,6 +78,7 @@
             justify-content: center;
             gap: 12px;
             text-align: center;
+            flex: 1;
         }
 
         .btn:hover {
@@ -91,7 +93,7 @@
         }
 
         .btn-icon {
-            font-size: 32px;
+            font-size: 36px;
         }
 
         .bottom-buttons {
@@ -107,8 +109,8 @@
             background: #f8f9fa;
             border: 2px solid #dee2e6;
             color: #495057;
-            padding: 18px;
-            font-size: 18px;
+            padding: 20px;
+            font-size: 20px;
         }
 
         .btn-secondary:hover {
@@ -146,15 +148,21 @@
         }
 
         .back-button {
-            background: transparent;
+            background: #667eea;
             border: none;
-            color: #667eea;
-            font-size: 18px;
+            color: white;
+            font-size: 20px;
             font-weight: 600;
-            padding: 12px 0;
+            padding: 16px 24px;
             cursor: pointer;
-            text-align: left;
-            margin-bottom: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: #5568d3;
         }
 
         .camera-container {
@@ -186,9 +194,9 @@
             display: inline-block;
             background: #667eea;
             color: white;
-            padding: 16px 32px;
+            padding: 20px 40px;
             border-radius: 12px;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -459,10 +467,6 @@
                         <span class="btn-icon">🎙️</span>
                         <span>Ask a Question</span>
                     </button>
-                    <button class="btn" onclick="showScreen('checkScreen')">
-                        <span class="btn-icon">⚠️</span>
-                        <span>Check a Message</span>
-                    </button>
                 </div>
 
                 <div class="bottom-buttons">
@@ -483,7 +487,7 @@
 
             <!-- Scan Screen -->
             <div class="screen" id="scanScreen">
-                <button class="back-button" onclick="resetScan()">← Back</button>
+                <button class="back-button" onclick="resetScan()">← Back to Home</button>
                 <div class="camera-container">
                     <div class="camera-preview" id="imagePreview"></div>
                     <label class="upload-label">
@@ -494,18 +498,9 @@
                 <div id="scanResult"></div>
             </div>
 
-            <!-- Check Message Screen -->
-            <div class="screen" id="checkScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
-                <h2 style="font-size: 24px; margin-bottom: 16px;">Paste or type the message:</h2>
-                <textarea id="messageInput" placeholder="Paste the message here..."></textarea>
-                <button class="btn" onclick="checkMessage()">Check This Message</button>
-                <div id="checkResult"></div>
-            </div>
-
             <!-- Voice Screen -->
             <div class="screen" id="voiceScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
                 <div class="conversation" id="conversation"></div>
                 <div class="voice-container">
                     <button class="mic-button" id="micButton" onclick="toggleVoice()">🎤</button>
@@ -517,7 +512,7 @@
 
             <!-- Family Screen -->
             <div class="screen" id="familyScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Call Family</h2>
                 <div class="family-list">
                     <!-- Will be populated dynamically -->
@@ -526,7 +521,7 @@
 
             <!-- Reminders Screen -->
             <div class="screen" id="remindersScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Your Reminders</h2>
                 <div id="remindersList">
                     <div class="reminder-card">
@@ -549,7 +544,7 @@
 
             <!-- Settings Screen -->
             <div class="screen" id="settingsScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Settings</h2>
                 
                 <!-- Personal Info -->
@@ -587,6 +582,7 @@
                     <div id="contactsList"></div>
                     
                     <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #dee2e6;">
+                        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Add New Contact</h4>
                         <label style="font-size: 16px; display: block; margin-bottom: 8px;">Name</label>
                         <input type="text" id="newContactName" placeholder="e.g., Sarah" 
                                style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
@@ -603,6 +599,39 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Edit Contact Screen -->
+            <div class="screen" id="editContactScreen">
+                <button class="back-button" onclick="showScreen('settingsScreen')">← Back to Settings</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Edit Contact</h2>
+                
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <label style="font-size: 16px; display: block; margin-bottom: 8px;">Name</label>
+                    <input type="text" id="editContactName" 
+                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                    
+                    <label style="font-size: 16px; display: block; margin-bottom: 8px;">Relationship</label>
+                    <input type="text" id="editContactRelation" 
+                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                    
+                    <label style="font-size: 16px; display: block; margin-bottom: 8px;">Phone Number</label>
+                    <input type="tel" id="editContactPhone" 
+                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                    
+                    <button class="btn" style="padding: 12px; margin-bottom: 12px;" onclick="saveEditContact()">Save Changes</button>
+                    <button class="btn" style="padding: 12px; background: #dc3545; border-color: #dc3545;" onclick="deleteEditingContact()">Delete Contact</button>
+                </div>
+            </div>
+
+            <!-- Explain More Screen -->
+            <div class="screen" id="explainMoreScreen">
+                <button class="back-button" onclick="showScreen('scanScreen')">← Back</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">More Details</h2>
+                <div id="detailedExplanation" style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+                    <div style="font-size: 18px; line-height: 1.6; color: #212529;"></div>
+                </div>
+                <button class="btn btn-action" onclick="showScreen('scanScreen')">← Back to Document</button>
+            </div>
         </div>
     </div>
 
@@ -611,6 +640,8 @@
         let isListening = false;
         let recognition = null;
         let familyContacts = [];
+        let editingContactIndex = -1;
+        let currentImageData = null;
 
         // Initialize speech recognition if available
         if ('webkitSpeechRecognition' in window) {
@@ -726,6 +757,46 @@
             alert('Contact added!');
         }
 
+        function editContact(index) {
+            editingContactIndex = index;
+            const contact = familyContacts[index];
+            
+            document.getElementById('editContactName').value = contact.name;
+            document.getElementById('editContactRelation').value = contact.relation;
+            document.getElementById('editContactPhone').value = contact.phone;
+            
+            showScreen('editContactScreen');
+        }
+
+        function saveEditContact() {
+            if (editingContactIndex === -1) return;
+            
+            const name = document.getElementById('editContactName').value.trim();
+            const relation = document.getElementById('editContactRelation').value.trim();
+            const phone = document.getElementById('editContactPhone').value.trim();
+            
+            if (!name || !phone) {
+                alert('Please enter at least a name and phone number');
+                return;
+            }
+            
+            familyContacts[editingContactIndex] = { name, relation, phone };
+            saveContacts();
+            
+            alert('Contact updated!');
+            showScreen('settingsScreen');
+        }
+
+        function deleteEditingContact() {
+            if (editingContactIndex === -1) return;
+            
+            if (confirm('Delete this contact?')) {
+                familyContacts.splice(editingContactIndex, 1);
+                saveContacts();
+                showScreen('settingsScreen');
+            }
+        }
+
         function deleteContact(index) {
             if (confirm('Delete this contact?')) {
                 familyContacts.splice(index, 1);
@@ -744,12 +815,12 @@
             
             list.innerHTML = familyContacts.map((contact, index) => `
                 <div style="background: white; border: 2px solid #dee2e6; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
+                    <div style="flex: 1;">
                         <div style="font-size: 18px; font-weight: 600; color: #212529;">${contact.name}</div>
                         <div style="font-size: 16px; color: #6c757d;">${contact.relation}</div>
                         <div style="font-size: 16px; color: #495057; margin-top: 4px;">${contact.phone}</div>
                     </div>
-                    <button onclick="deleteContact(${index})" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 16px;">Delete</button>
+                    <button onclick="editContact(${index})" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Edit</button>
                 </div>
             `).join('');
         }
@@ -795,12 +866,13 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
+                currentImageData = e.target.result;
                 const preview = document.getElementById('imagePreview');
-                preview.innerHTML = `<img src="${e.target.result}" alt="Scanned document">`;
+                preview.innerHTML = `<img src="${currentImageData}" alt="Scanned document">`;
                 
                 document.querySelector('.upload-label').style.display = 'none';
                 
-                analyzeImage(e.target.result);
+                analyzeImage(currentImageData);
             };
             reader.readAsDataURL(file);
         }
@@ -855,86 +927,50 @@
             }
         }
 
+        async function explainMore() {
+            if (!currentImageData) {
+                alert('No document to explain. Please scan a document first.');
+                return;
+            }
+
+            const detailDiv = document.querySelector('#detailedExplanation > div');
+            detailDiv.innerHTML = '<div class="loading">Getting more details...</div>';
+            
+            showScreen('explainMoreScreen');
+
+            try {
+                const response = await fetch('/api/analyze-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: currentImageData.split(',')[1],
+                        detailed: true
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.response || 'I had trouble providing more details.';
+
+                detailDiv.innerHTML = aiResponse.replace(/\n/g, '<br><br>');
+            } catch (error) {
+                console.error('API Error:', error);
+                detailDiv.innerHTML = 'I\'m having trouble getting more details right now. Please try again or call a family member for help.';
+            }
+        }
+
         function resetScan() {
             document.getElementById('imagePreview').innerHTML = '';
             document.getElementById('scanResult').innerHTML = '';
             document.querySelector('.upload-label').style.display = 'inline-block';
+            currentImageData = null;
             showScreen('homeScreen');
         }
 
         function askFollowUp() {
             showScreen('voiceScreen');
             addMessage("I have a question about the document I just scanned", 'user');
-        }
-
-        function explainMore() {
-            alert('More detailed explanation feature coming soon! For now, you can call a family member to discuss this document.');
-        }
-
-        async function checkMessage() {
-            const message = document.getElementById('messageInput').value.trim();
-            if (!message) {
-                alert('Please paste or type a message first.');
-                return;
-            }
-
-            const resultDiv = document.getElementById('checkResult');
-            resultDiv.innerHTML = '<div class="loading">Checking this message...</div>';
-
-            try {
-                const response = await fetch('/api/check-message', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message
-                    })
-                });
-
-                const data = await response.json();
-                const aiResponse = data.response || '';
-
-                let riskClass = 'risk-warning';
-                let riskText = '🟡 This might be suspicious';
-                
-                if (aiResponse.toUpperCase().includes('SAFE') && !aiResponse.toLowerCase().includes('not safe')) {
-                    riskClass = 'risk-safe';
-                    riskText = '🟢 This looks safe';
-                } else if (aiResponse.toUpperCase().includes('SCAM')) {
-                    riskClass = 'risk-danger';
-                    riskText = '🔴 This looks like a scam';
-                }
-
-                resultDiv.innerHTML = `
-                    <div class="result-card">
-                        <div class="risk-indicator ${riskClass}">${riskText}</div>
-                        <div class="result-text">${aiResponse.replace(/\n/g, '<br><br>')}</div>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-action" onclick="resetMessageCheck()">Check Another Message</button>
-                        ${riskClass !== 'risk-safe' ? '<button class="btn btn-action" onclick="showScreen(\'familyScreen\')">📞 Call family about this</button>' : ''}
-                        <button class="btn btn-action" onclick="showScreen('homeScreen')">Done</button>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('API Error:', error);
-                resultDiv.innerHTML = `
-                    <div class="result-card">
-                        <div class="result-title">Something went wrong</div>
-                        <div class="result-text">I'm having trouble checking this message right now. When in doubt, it's always safer to check with a family member before responding to suspicious messages.</div>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call Family</button>
-                        <button class="btn btn-action" onclick="showScreen('homeScreen')">Done</button>
-                    </div>
-                `;
-            }
-        }
-
-        function resetMessageCheck() {
-            document.getElementById('messageInput').value = '';
-            document.getElementById('checkResult').innerHTML = '';
         }
 
         function toggleVoice() {
