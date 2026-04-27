@@ -35,6 +35,20 @@
             color: white;
             padding: 30px 24px;
             text-align: center;
+            position: relative;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 28px;
+            cursor: pointer;
+            opacity: 0.9;
+        }
+
+        .settings-icon:hover {
+            opacity: 1;
         }
 
         .header h1 {
@@ -185,51 +199,6 @@
             display: none;
         }
 
-        .result-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .result-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #212529;
-            margin-bottom: 12px;
-        }
-
-        .result-text {
-            font-size: 18px;
-            line-height: 1.6;
-            color: #495057;
-            margin-bottom: 8px;
-        }
-
-        .risk-indicator {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .risk-safe {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .risk-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .risk-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
         .action-buttons {
             display: flex;
             flex-direction: column;
@@ -242,16 +211,19 @@
             font-size: 18px;
         }
 
-        textarea {
+        textarea, input[type="text"], input[type="tel"] {
             width: 100%;
-            min-height: 120px;
             padding: 16px;
             font-size: 18px;
             border: 2px solid #dee2e6;
             border-radius: 12px;
-            resize: vertical;
             font-family: inherit;
             margin-bottom: 16px;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
         }
 
         .voice-container {
@@ -410,6 +382,78 @@
             color: white;
         }
 
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .form-section h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #212529;
+        }
+
+        .contact-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .contact-phone {
+            font-size: 16px;
+            color: #6c757d;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .add-contact-form {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
         @media (max-width: 600px) {
             .container {
                 border-radius: 0;
@@ -425,6 +469,7 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="settings-icon" onclick="showScreen('settingsScreen')">⚙️</div>
             <h1>ClearPath AI</h1>
             <div class="greeting">Hi <span id="userName">there</span>, how can I help today?</div>
         </div>
@@ -497,31 +542,11 @@
             <div class="screen" id="familyScreen">
                 <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Call Family</h2>
-                <div class="family-list">
-                    <div class="family-card" onclick="callFamily('Sarah')">
-                        <span class="family-icon">👧</span>
-                        <div class="family-info">
-                            <div class="family-name">Sarah</div>
-                            <div class="family-relation">Daughter</div>
-                        </div>
-                        <span style="font-size: 24px;">📞</span>
-                    </div>
-                    <div class="family-card" onclick="callFamily('Michael')">
-                        <span class="family-icon">👦</span>
-                        <div class="family-info">
-                            <div class="family-name">Michael</div>
-                            <div class="family-relation">Son</div>
-                        </div>
-                        <span style="font-size: 24px;">📞</span>
-                    </div>
-                    <div class="family-card" onclick="callFamily('Emergency')">
-                        <span class="family-icon">🚨</span>
-                        <div class="family-info">
-                            <div class="family-name">Emergency Contact</div>
-                            <div class="family-relation">911</div>
-                        </div>
-                        <span style="font-size: 24px;">📞</span>
-                    </div>
+                <div class="family-list" id="familyList">
+                    <!-- Contacts will be loaded here -->
+                </div>
+                <div style="text-align: center; margin-top: 20px; color: #6c757d;" id="noContactsMessage">
+                    No contacts yet. Add them in Settings!
                 </div>
             </div>
 
@@ -547,14 +572,192 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Settings Screen -->
+            <div class="screen" id="settingsScreen">
+                <button class="back-button" onclick="saveSettingsAndGoHome()">← Back</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Settings</h2>
+                
+                <div class="settings-form">
+                    <!-- Personal Info -->
+                    <div class="form-section">
+                        <h3>Your Information</h3>
+                        <label>Your First Name</label>
+                        <input type="text" id="userNameInput" placeholder="Enter your first name">
+                    </div>
+
+                    <!-- Family Contacts -->
+                    <div class="form-section">
+                        <h3>Family Contacts</h3>
+                        <div id="contactsList">
+                            <!-- Saved contacts will appear here -->
+                        </div>
+                        
+                        <div class="add-contact-form">
+                            <label>Add New Contact</label>
+                            <input type="text" id="newContactName" placeholder="Name (e.g., Sarah)">
+                            <input type="tel" id="newContactPhone" placeholder="Phone (e.g., 555-1234)">
+                            <button class="btn" onclick="addContact()">Add Contact</button>
+                        </div>
+                    </div>
+
+                    <!-- Voice Settings -->
+                    <div class="form-section">
+                        <h3>Voice Settings</h3>
+                        <label>Voice Type</label>
+                        <select id="voiceType" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 12px; margin-bottom: 16px;">
+                            <option value="female">Female Voice</option>
+                            <option value="male">Male Voice</option>
+                        </select>
+                        
+                        <label>Speech Speed</label>
+                        <select id="speechSpeed" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 12px;">
+                            <option value="0.8">Slow</option>
+                            <option value="1.0">Normal</option>
+                            <option value="1.3" selected>Fast</option>
+                            <option value="1.5">Very Fast</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        // Load saved settings
+        let userName = localStorage.getItem('userName') || 'there';
+        let familyContacts = JSON.parse(localStorage.getItem('familyContacts') || '[]');
+        let voiceSettings = JSON.parse(localStorage.getItem('voiceSettings') || '{"type":"female","speed":1.3}');
+        
         let conversationHistory = [];
         let isListening = false;
         let recognition = null;
 
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUserName();
+            loadFamilyContacts();
+            loadSettings();
+        });
+
+        function updateUserName() {
+            document.getElementById('userName').textContent = userName;
+            if (document.getElementById('userNameInput')) {
+                document.getElementById('userNameInput').value = userName === 'there' ? '' : userName;
+            }
+        }
+
+        function saveSettingsAndGoHome() {
+            // Save name
+            const nameInput = document.getElementById('userNameInput').value.trim();
+            if (nameInput) {
+                userName = nameInput;
+                localStorage.setItem('userName', userName);
+                updateUserName();
+            }
+
+            // Save voice settings
+            voiceSettings = {
+                type: document.getElementById('voiceType').value,
+                speed: parseFloat(document.getElementById('speechSpeed').value)
+            };
+            localStorage.setItem('voiceSettings', JSON.stringify(voiceSettings));
+
+            showScreen('homeScreen');
+        }
+
+        function loadSettings() {
+            if (document.getElementById('voiceType')) {
+                document.getElementById('voiceType').value = voiceSettings.type;
+                document.getElementById('speechSpeed').value = voiceSettings.speed;
+            }
+        }
+
+        function addContact() {
+            const name = document.getElementById('newContactName').value.trim();
+            const phone = document.getElementById('newContactPhone').value.trim();
+
+            if (!name || !phone) {
+                alert('Please enter both name and phone number');
+                return;
+            }
+
+            familyContacts.push({ name, phone });
+            localStorage.setItem('familyContacts', JSON.stringify(familyContacts));
+
+            document.getElementById('newContactName').value = '';
+            document.getElementById('newContactPhone').value = '';
+
+            displayContactsInSettings();
+            loadFamilyContacts();
+        }
+
+        function deleteContact(index) {
+            if (confirm('Delete this contact?')) {
+                familyContacts.splice(index, 1);
+                localStorage.setItem('familyContacts', JSON.stringify(familyContacts));
+                displayContactsInSettings();
+                loadFamilyContacts();
+            }
+        }
+
+        function displayContactsInSettings() {
+            const list = document.getElementById('contactsList');
+            if (!list) return;
+
+            if (familyContacts.length === 0) {
+                list.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 20px;">No contacts saved yet</p>';
+                return;
+            }
+
+            list.innerHTML = familyContacts.map((contact, index) => `
+                <div class="contact-item">
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-phone">${contact.phone}</div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteContact(${index})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function loadFamilyContacts() {
+            const list = document.getElementById('familyList');
+            const noContactsMsg = document.getElementById('noContactsMessage');
+            
+            if (!list) return;
+
+            if (familyContacts.length === 0) {
+                list.innerHTML = '';
+                if (noContactsMsg) noContactsMsg.style.display = 'block';
+                return;
+            }
+
+            if (noContactsMsg) noContactsMsg.style.display = 'none';
+
+            list.innerHTML = familyContacts.map(contact => `
+                <div class="family-card" onclick="callFamily('${contact.name}', '${contact.phone}')">
+                    <span class="family-icon">👤</span>
+                    <div class="family-info">
+                        <div class="family-name">${contact.name}</div>
+                        <div class="family-relation">${contact.phone}</div>
+                    </div>
+                    <span style="font-size: 24px;">📞</span>
+                </div>
+            `).join('');
+
+            // Update settings display
+            displayContactsInSettings();
+        }
+
+        function callFamily(name, phone) {
+            if (confirm(`Call ${name}?`)) {
+                // Actually dial the number
+                window.location.href = `tel:${phone}`;
+            }
+        }
+
+        // Initialize speech recognition
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.continuous = false;
@@ -579,24 +782,30 @@
                 screen.classList.remove('active');
             });
             document.getElementById(screenId).classList.add('active');
+
+            // Load settings when opening settings screen
+            if (screenId === 'settingsScreen') {
+                loadSettings();
+                displayContactsInSettings();
+            }
         }
 
-       function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.getElementById('imagePreview');
-        preview.innerHTML = `<img src="${e.target.result}" alt="Scanned document">`;
-        
-        // Hide the upload button
-        document.querySelector('.upload-label').style.display = 'none';
-        
-        analyzeImage(e.target.result);
-    };
-    reader.readAsDataURL(file);
-}
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Scanned document">`;
+                
+                // Hide the upload button
+                document.querySelector('.upload-label').style.display = 'none';
+                
+                analyzeImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
 
         async function analyzeImage(imageData) {
             const resultDiv = document.getElementById('scanResult');
@@ -609,30 +818,31 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        image: imageData.split(',')[1]
+                        image: imageData.split(',')[1],
+                        userName: userName
                     })
                 });
 
                 const data = await response.json();
                 const aiResponse = data.response || 'I had trouble reading this document.';
 
-               resultDiv.innerHTML = `
-    <div style="margin-bottom: 20px;">
-        <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
-        <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 12px;">
-            <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${aiResponse.replace(/\n/g, '<br>')}</div>
-        </div>
-        <div style="font-size: 16px; color: #6c757d; margin-bottom: 20px; padding: 0 4px;">
-            This does not appear urgent.<br>
-            You have time to review it.
-        </div>
-    </div>
-    <div class="action-buttons">
-        <button class="btn btn-action" onclick="resetScan()">✓ I understand</button>
-        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
-        <button class="btn btn-action" onclick="explainMore()">❓ Explain more</button>
-    </div>
-`;
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 12px;">
+                            <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${aiResponse.replace(/\n/g, '<br>')}</div>
+                        </div>
+                        <div style="font-size: 16px; color: #6c757d; margin-bottom: 20px; padding: 0 4px;">
+                            This does not appear urgent.<br>
+                            You have time to review it.
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-action" onclick="resetScan()">✓ I understand</button>
+                        <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
+                        <button class="btn btn-action" onclick="explainMore()">❓ Explain more</button>
+                    </div>
+                `;
             } catch (error) {
                 console.error('API Error:', error);
                 resultDiv.innerHTML = `
@@ -651,13 +861,12 @@
         function resetScan() {
             document.getElementById('imagePreview').innerHTML = '';
             document.getElementById('scanResult').innerHTML = '';
-             document.querySelector('.upload-label').style.display = 'inline-block';
+            document.querySelector('.upload-label').style.display = 'inline-block';
             showScreen('homeScreen');
         }
 
-        function askFollowUp() {
-            showScreen('voiceScreen');
-            addMessage("I have a question about the document I just scanned", 'user');
+        function explainMore() {
+            alert('More detailed explanation feature coming soon! For now, you can call a family member to discuss this document.');
         }
 
         async function checkMessage() {
@@ -677,7 +886,8 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: message
+                        message: message,
+                        userName: userName
                     })
                 });
 
@@ -696,9 +906,9 @@
                 }
 
                 resultDiv.innerHTML = `
-                    <div class="result-card">
-                        <div class="risk-indicator ${riskClass}">${riskText}</div>
-                        <div class="result-text">${aiResponse.replace(/\n/g, '<br><br>')}</div>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                        <div style="display: inline-block; padding: 8px 16px; border-radius: 8px; font-size: 18px; font-weight: 700; margin-bottom: 16px; background: ${riskClass === 'risk-safe' ? '#d4edda' : riskClass === 'risk-danger' ? '#f8d7da' : '#fff3cd'}; color: ${riskClass === 'risk-safe' ? '#155724' : riskClass === 'risk-danger' ? '#721c24' : '#856404'};">${riskText}</div>
+                        <div style="font-size: 18px; line-height: 1.6; color: #495057;">${aiResponse.replace(/\n/g, '<br>')}</div>
                     </div>
                     <div class="action-buttons">
                         <button class="btn btn-action" onclick="resetMessageCheck()">Check Another Message</button>
@@ -783,7 +993,8 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        messages: conversationHistory
+                        messages: conversationHistory,
+                        userName: userName
                     })
                 });
 
@@ -799,12 +1010,6 @@
             }
         }
 
-        function callFamily(name) {
-            if (confirm(`Call ${name}?`)) {
-                alert(`In a real version, this would dial ${name}'s phone number.`);
-            }
-        }
-
         function markReminderDone(button) {
             const card = button.closest('.reminder-card');
             card.style.opacity = '0.5';
@@ -814,11 +1019,6 @@
             button.style.color = 'white';
             button.style.cursor = 'default';
         }
-
-        function explainMore() {
-    alert('More detailed explanation feature coming soon! For now, you can call a family member to discuss this document.');
-}
-        document.getElementById('userName').textContent = 'there';
     </script>
 </body>
 </html>
