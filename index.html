@@ -573,56 +573,62 @@
                 </div>
             </div>
 
-            <!-- Settings Screen -->
-            <div class="screen" id="settingsScreen">
-                <button class="back-button" onclick="saveSettingsAndGoHome()">← Back</button>
-                <h2 style="font-size: 24px; margin-bottom: 20px;">Settings</h2>
-                
-                <div class="settings-form">
-                    <!-- Personal Info -->
-                    <div class="form-section">
-                        <h3>Your Information</h3>
-                        <label>Your First Name</label>
-                        <input type="text" id="userNameInput" placeholder="Enter your first name">
-                    </div>
-
-                    <!-- Family Contacts -->
-                    <div class="form-section">
-                        <h3>Family Contacts</h3>
-                        <div id="contactsList">
-                            <!-- Saved contacts will appear here -->
-                        </div>
-                        
-                        <div class="add-contact-form">
-                            <label>Add New Contact</label>
-                            <input type="text" id="newContactName" placeholder="Name (e.g., Sarah)">
-                            <input type="tel" id="newContactPhone" placeholder="Phone (e.g., 555-1234)">
-                            <button class="btn" onclick="addContact()">Add Contact</button>
-                        </div>
-                    </div>
-
-                    <!-- Voice Settings -->
-                    <div class="form-section">
-                        <h3>Voice Settings</h3>
-                        <label>Voice Type</label>
-                        <select id="voiceType" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 12px; margin-bottom: 16px;">
-                            <option value="female">Female Voice</option>
-                            <option value="male">Male Voice</option>
-                        </select>
-                        
-                        <label>Speech Speed</label>
-                        <select id="speechSpeed" style="width: 100%; padding: 16px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 12px;">
-                            <option value="0.8">Slow</option>
-                            <option value="1.0">Normal</option>
-                            <option value="1.3" selected>Fast</option>
-                            <option value="1.5">Very Fast</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
+           <!-- Settings Screen -->
+<div class="screen" id="settingsScreen">
+    <button class="back-button" onclick="showScreen('homeScreen')">← Back</button>
+    <h2 style="font-size: 24px; margin-bottom: 20px;">Settings</h2>
+    
+    <!-- Personal Info -->
+    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 8px;">Your Name</label>
+        <input type="text" id="userNameInput" placeholder="Enter your first name" 
+               style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px;">
+        <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="saveName()">Save Name</button>
     </div>
 
+    <!-- Voice Settings -->
+    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 12px;">Voice Settings</label>
+        
+        <label style="display: block; margin-bottom: 8px; font-size: 16px;">
+            <input type="radio" name="voiceGender" value="female" checked> Female voice
+        </label>
+        <label style="display: block; margin-bottom: 16px; font-size: 16px;">
+            <input type="radio" name="voiceGender" value="male"> Male voice
+        </label>
+        
+        <label style="font-size: 16px; display: block; margin-bottom: 8px;">Speech Speed</label>
+        <select id="voiceSpeed" style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px;">
+            <option value="1.0">Normal</option>
+            <option value="1.3" selected>Faster</option>
+            <option value="1.5">Very Fast</option>
+        </select>
+        
+        <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="saveVoiceSettings()">Save Voice Settings</button>
+    </div>
+
+    <!-- Family Contacts -->
+    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Family Contacts</h3>
+        <div id="contactsList"></div>
+        
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #dee2e6;">
+            <label style="font-size: 16px; display: block; margin-bottom: 8px;">Name</label>
+            <input type="text" id="newContactName" placeholder="e.g., Sarah" 
+                   style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+            
+            <label style="font-size: 16px; display: block; margin-bottom: 8px;">Relationship</label>
+            <input type="text" id="newContactRelation" placeholder="e.g., Daughter" 
+                   style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+            
+            <label style="font-size: 16px; display: block; margin-bottom: 8px;">Phone Number</label>
+            <input type="tel" id="newContactPhone" placeholder="(555) 123-4567" 
+                   style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+            
+            <button class="btn" style="padding: 12px;" onclick="addContact()">Add Contact</button>
+        </div>
+    </div>
+</div>
     <script>
         // Load saved settings
         let userName = localStorage.getItem('userName') || 'there';
