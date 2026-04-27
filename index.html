@@ -738,12 +738,12 @@
                 </div>
                 <textarea id="textInput" placeholder="Or type your question here..." style="margin-top: 20px;"></textarea>
                 <button class="btn" onclick="sendTextQuestion()">Send Question</button>
-                <button class="back-button-fixed" onclick="showScreen('homeScreen')">← Back to Home</button>
+                <button class="back-button-fixed" onclick="goBackHome()">← Back to Home</button>
             </div>
 
             <!-- Family Screen -->
             <div class="screen" id="familyScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
+                <button class="back-button" onclick="goBackHome()">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Call Family</h2>
                 <div class="family-list">
                     <!-- Will be populated dynamically -->
@@ -752,7 +752,7 @@
 
             <!-- Reminders Screen -->
             <div class="screen" id="remindersScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
+                <button class="back-button" onclick="goBackHome()">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Your Reminders</h2>
                 
                 <!-- Filter Buttons -->
@@ -781,7 +781,7 @@
 
             <!-- Settings Screen -->
             <div class="screen" id="settingsScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
+                <button class="back-button" onclick="goBackHome()">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Settings</h2>
                 
                 <!-- Personal Info -->
@@ -809,10 +809,9 @@
                     
                     <label style="font-size: 16px; display: block; margin-bottom: 8px;">Speech Speed</label>
                     <select id="voiceSpeed" onchange="updateVoice()" style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px;">
-                        <option value="0.8">Slow</option>
-                        <option value="1.0">Normal</option>
-                        <option value="1.3" selected>Faster</option>
-                        <option value="1.5">Very Fast</option>
+                        <option value="0.9">Slow</option>
+                        <option value="1.0" selected>Normal</option>
+                        <option value="1.1">Faster</option>
                     </select>
                     
                     <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="testVoice()">Test Voice</button>
@@ -905,11 +904,23 @@
         let ttsEnabled = true;
         let speechSynthesis = window.speechSynthesis;
         let currentVoice = null;
-        let speechRate = 1.3;
+        let speechRate = 1.0;
+
+        // Stop speech function
+        function stopSpeaking() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+        }
+
+        // Modified goBackHome to stop speech
+        function goBackHome() {
+            stopSpeaking();
+            showScreen('homeScreen');
+        }
 
         // Initialize speech recognition if available
         if ('webkitSpeechRecognition' in window) {
-            // Main recognition
             recognition = new webkitSpeechRecognition();
             recognition.continuous = false;
             recognition.interimResults = false;
@@ -927,7 +938,6 @@
                 document.getElementById('voiceText').textContent = 'Say "Hey ClearPath" or tap to ask';
             };
 
-            // Wake word recognition
             wakeWordRecognition = new webkitSpeechRecognition();
             wakeWordRecognition.continuous = true;
             wakeWordRecognition.interimResults = true;
@@ -975,7 +985,6 @@
             };
         }
 
-        // Load saved settings on page load
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
             loadContacts();
@@ -1001,16 +1010,59 @@
         function updateVoice() {
             const voices = speechSynthesis.getVoices();
             const gender = document.querySelector('input[name="voiceGender"]:checked')?.value || 'female';
-            speechRate = parseFloat(document.getElementById('voiceSpeed')?.value || 1.3);
+            speechRate = parseFloat(document.getElementById('voiceSpeed')?.value || 1.0);
             
+            // Prioritize high-quality, natural-sounding voices
             let selectedVoice = null;
+            
             if (gender === 'female') {
-                selectedVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Victoria'));
+                // Try to find premium/enhanced female voices first
+                selectedVoice = voices.find(v => 
+                    (v.name.includes('Samantha') || 
+                     v.name.includes('Ava') || 
+                     v.name.includes('Allison') ||
+                     v.name.includes('Enhanced') ||
+                     v.name.includes('Premium')) && 
+                    v.lang.startsWith('en')
+                );
+                
+                // Fallback to any English female voice
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => 
+                        (v.name.toLowerCase().includes('female') || 
+                         v.name.includes('Victoria') ||
+                         v.name.includes('Karen') ||
+                         v.name.includes('Moira')) && 
+                        v.lang.startsWith('en')
+                    );
+                }
             } else {
-                selectedVoice = voices.find(v => v.name.includes('Male') || v.name.includes('Daniel') || v.name.includes('Alex'));
+                // Try to find premium/enhanced male voices first
+                selectedVoice = voices.find(v => 
+                    (v.name.includes('Alex') || 
+                     v.name.includes('Daniel') || 
+                     v.name.includes('Tom') ||
+                     v.name.includes('Enhanced') ||
+                     v.name.includes('Premium')) && 
+                    v.lang.startsWith('en')
+                );
+                
+                // Fallback to any English male voice
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => 
+                        (v.name.toLowerCase().includes('male') || 
+                         v.name.includes('Fred')) && 
+                        v.lang.startsWith('en')
+                    );
+                }
             }
             
-            currentVoice = selectedVoice || voices[0];
+            // Final fallback to first available English voice
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+            }
+            
+            currentVoice = selectedVoice;
             
             localStorage.setItem('voiceGender', gender);
             localStorage.setItem('voiceSpeed', speechRate);
@@ -1273,7 +1325,7 @@
             const genderRadio = document.querySelector(`input[name="voiceGender"][value="${voiceGender}"]`);
             if (genderRadio) genderRadio.checked = true;
             
-            const voiceSpeed = localStorage.getItem('voiceSpeed') || '1.3';
+            const voiceSpeed = localStorage.getItem('voiceSpeed') || '1.0';
             if (document.getElementById('voiceSpeed')) {
                 document.getElementById('voiceSpeed').value = voiceSpeed;
             }
@@ -1480,7 +1532,6 @@
                 const needAction = data.needAction || 'No';
                 const ifIgnored = data.ifIgnored || 'Nothing urgent will happen.';
 
-                // Determine scam score class
                 let scamClass = 'scam-score-safe';
                 let scamIcon = '✅';
                 if (scamScore === 'MAYBE') {
@@ -1583,6 +1634,7 @@
         }
 
         function resetScan() {
+            stopSpeaking();
             document.getElementById('imagePreview').innerHTML = '';
             document.getElementById('scanResult').innerHTML = '';
             document.querySelector('.upload-label').style.display = 'inline-block';
