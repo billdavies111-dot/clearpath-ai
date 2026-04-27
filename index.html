@@ -492,17 +492,20 @@
                     </button>
                 </div>
 
-                <div class="bottom-buttons">
-                    <button class="btn btn-secondary" onclick="showScreen('familyScreen')">
-                        <span class="btn-icon">📞</span>
-                        <span>Call Family</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="showScreen('remindersScreen')">
-                        <span class="btn-icon">🔔</span>
-                        <span>Reminders</span>
-                    </button>
-                </div>
-            </div>
+                <div class="bottom-buttons" style="grid-template-columns: 1fr 1fr 1fr;">
+    <button class="btn btn-secondary" onclick="showScreen('familyScreen')">
+        <span class="btn-icon">📞</span>
+        <span>Call Family</span>
+    </button>
+    <button class="btn btn-secondary" onclick="showScreen('remindersScreen')">
+        <span class="btn-icon">🔔</span>
+        <span>Reminders</span>
+    </button>
+    <button class="btn btn-secondary" onclick="showScreen('settingsScreen')">
+        <span class="btn-icon">⚙️</span>
+        <span>Settings</span>
+    </button>
+</div>
 
             <!-- Scan Screen -->
             <div class="screen" id="scanScreen">
