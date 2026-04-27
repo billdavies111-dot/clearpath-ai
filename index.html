@@ -141,6 +141,7 @@
             display: none;
             flex-direction: column;
             height: 100%;
+            overflow-y: auto;
         }
 
         .screen.active {
@@ -268,6 +269,17 @@
             font-size: 18px;
         }
 
+        .btn-delete {
+            background: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+        }
+
+        .btn-delete:hover {
+            background: #c82333 !important;
+            border-color: #bd2130 !important;
+        }
+
         textarea {
             width: 100%;
             min-height: 120px;
@@ -278,6 +290,17 @@
             resize: vertical;
             font-family: inherit;
             margin-bottom: 16px;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 12px;
         }
 
         .voice-container {
@@ -406,6 +429,12 @@
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 12px;
+            position: relative;
+        }
+
+        .reminder-card.completed {
+            opacity: 0.5;
+            border-left-color: #28a745;
         }
 
         .reminder-title {
@@ -421,6 +450,11 @@
             margin-bottom: 12px;
         }
 
+        .reminder-actions {
+            display: flex;
+            gap: 8px;
+        }
+
         .reminder-done {
             background: transparent;
             border: 2px solid #28a745;
@@ -429,10 +463,26 @@
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
+            flex: 1;
         }
 
         .reminder-done:hover {
             background: #28a745;
+            color: white;
+        }
+
+        .reminder-delete {
+            background: transparent;
+            border: 2px solid #dc3545;
+            color: #dc3545;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .reminder-delete:hover {
+            background: #dc3545;
             color: white;
         }
 
@@ -504,7 +554,7 @@
                 <div class="conversation" id="conversation"></div>
                 <div class="voice-container">
                     <button class="mic-button" id="micButton" onclick="toggleVoice()">🎤</button>
-                    <div class="voice-text" id="voiceText">Tap to ask a question</div>
+                    <div class="voice-text" id="voiceText">Say "Hey ClearPath" or tap to ask</div>
                 </div>
                 <textarea id="textInput" placeholder="Or type your question here..." style="margin-top: 20px;"></textarea>
                 <button class="btn" onclick="sendTextQuestion()">Send Question</button>
@@ -523,23 +573,17 @@
             <div class="screen" id="remindersScreen">
                 <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Your Reminders</h2>
-                <div id="remindersList">
-                    <div class="reminder-card">
-                        <div class="reminder-title">Take morning medication</div>
-                        <div class="reminder-time">Today at 9:00 AM</div>
-                        <button class="reminder-done" onclick="markReminderDone(this)">✓ Mark as Done</button>
-                    </div>
-                    <div class="reminder-card">
-                        <div class="reminder-title">Doctor appointment</div>
-                        <div class="reminder-time">Tomorrow at 2:30 PM</div>
-                        <button class="reminder-done" onclick="markReminderDone(this)">✓ Mark as Done</button>
-                    </div>
-                    <div class="reminder-card">
-                        <div class="reminder-title">Call Sarah back</div>
-                        <div class="reminder-time">Today at 3:00 PM</div>
-                        <button class="reminder-done" onclick="markReminderDone(this)">✓ Mark as Done</button>
-                    </div>
+                
+                <!-- Add New Reminder -->
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Add New Reminder</h3>
+                    <input type="text" id="newReminderTitle" placeholder="What do you need to remember?">
+                    <input type="datetime-local" id="newReminderTime">
+                    <button class="btn" style="padding: 12px;" onclick="addReminder()">Add Reminder</button>
                 </div>
+
+                <!-- Reminders List -->
+                <div id="remindersList"></div>
             </div>
 
             <!-- Settings Screen -->
@@ -550,8 +594,7 @@
                 <!-- Personal Info -->
                 <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                     <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 8px;">Your Name</label>
-                    <input type="text" id="userNameInput" placeholder="Enter your first name" 
-                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px;">
+                    <input type="text" id="userNameInput" placeholder="Enter your first name">
                     <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="saveName()">Save Name</button>
                 </div>
 
@@ -559,21 +602,37 @@
                 <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                     <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 12px;">Voice Settings</label>
                     
+                    <label style="display: block; margin-bottom: 12px;">
+                        <input type="checkbox" id="ttsEnabled" checked onchange="toggleTTS()"> 
+                        <span style="font-size: 16px;">Speak responses out loud</span>
+                    </label>
+                    
                     <label style="display: block; margin-bottom: 8px; font-size: 16px;">
-                        <input type="radio" name="voiceGender" value="female" checked> Female voice
+                        <input type="radio" name="voiceGender" value="female" checked onchange="updateVoice()"> Female voice
                     </label>
                     <label style="display: block; margin-bottom: 16px; font-size: 16px;">
-                        <input type="radio" name="voiceGender" value="male"> Male voice
+                        <input type="radio" name="voiceGender" value="male" onchange="updateVoice()"> Male voice
                     </label>
                     
                     <label style="font-size: 16px; display: block; margin-bottom: 8px;">Speech Speed</label>
-                    <select id="voiceSpeed" style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px;">
+                    <select id="voiceSpeed" onchange="updateVoice()" style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px;">
+                        <option value="0.8">Slow</option>
                         <option value="1.0">Normal</option>
                         <option value="1.3" selected>Faster</option>
                         <option value="1.5">Very Fast</option>
                     </select>
                     
-                    <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="saveVoiceSettings()">Save Voice Settings</button>
+                    <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="testVoice()">Test Voice</button>
+                </div>
+
+                <!-- Wake Word Settings -->
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 12px;">Wake Word</label>
+                    <label style="display: block; margin-bottom: 12px;">
+                        <input type="checkbox" id="wakeWordEnabled" checked onchange="toggleWakeWord()"> 
+                        <span style="font-size: 16px;">Listen for "Hey ClearPath"</span>
+                    </label>
+                    <p style="font-size: 14px; color: #6c757d;">When enabled, ClearPath will listen for its name and respond automatically.</p>
                 </div>
 
                 <!-- Family Contacts -->
@@ -584,16 +643,13 @@
                     <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #dee2e6;">
                         <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Add New Contact</h4>
                         <label style="font-size: 16px; display: block; margin-bottom: 8px;">Name</label>
-                        <input type="text" id="newContactName" placeholder="e.g., Sarah" 
-                               style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                        <input type="text" id="newContactName" placeholder="e.g., Sarah">
                         
                         <label style="font-size: 16px; display: block; margin-bottom: 8px;">Relationship</label>
-                        <input type="text" id="newContactRelation" placeholder="e.g., Daughter" 
-                               style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                        <input type="text" id="newContactRelation" placeholder="e.g., Daughter">
                         
                         <label style="font-size: 16px; display: block; margin-bottom: 8px;">Phone Number</label>
-                        <input type="tel" id="newContactPhone" placeholder="(555) 123-4567" 
-                               style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                        <input type="tel" id="newContactPhone" placeholder="(555) 123-4567">
                         
                         <button class="btn" style="padding: 12px;" onclick="addContact()">Add Contact</button>
                     </div>
@@ -607,19 +663,16 @@
                 
                 <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
                     <label style="font-size: 16px; display: block; margin-bottom: 8px;">Name</label>
-                    <input type="text" id="editContactName" 
-                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                    <input type="text" id="editContactName">
                     
                     <label style="font-size: 16px; display: block; margin-bottom: 8px;">Relationship</label>
-                    <input type="text" id="editContactRelation" 
-                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                    <input type="text" id="editContactRelation">
                     
                     <label style="font-size: 16px; display: block; margin-bottom: 8px;">Phone Number</label>
-                    <input type="tel" id="editContactPhone" 
-                           style="width: 100%; padding: 12px; font-size: 18px; border: 2px solid #dee2e6; border-radius: 8px; margin-bottom: 12px;">
+                    <input type="tel" id="editContactPhone">
                     
                     <button class="btn" style="padding: 12px; margin-bottom: 12px;" onclick="saveEditContact()">Save Changes</button>
-                    <button class="btn" style="padding: 12px; background: #dc3545; border-color: #dc3545;" onclick="deleteEditingContact()">Delete Contact</button>
+                    <button class="btn btn-delete" style="padding: 12px;" onclick="deleteEditingContact()">Delete Contact</button>
                 </div>
             </div>
 
@@ -638,13 +691,23 @@
     <script>
         let conversationHistory = [];
         let isListening = false;
+        let wakeWordListening = false;
         let recognition = null;
+        let wakeWordRecognition = null;
         let familyContacts = [];
+        let reminders = [];
         let editingContactIndex = -1;
         let currentImageData = null;
+        
+        // Text-to-Speech settings
+        let ttsEnabled = true;
+        let speechSynthesis = window.speechSynthesis;
+        let currentVoice = null;
+        let speechRate = 1.3;
 
         // Initialize speech recognition if available
         if ('webkitSpeechRecognition' in window) {
+            // Main recognition
             recognition = new webkitSpeechRecognition();
             recognition.continuous = false;
             recognition.interimResults = false;
@@ -659,7 +722,56 @@
             recognition.onend = function() {
                 isListening = false;
                 document.getElementById('micButton').classList.remove('listening');
-                document.getElementById('voiceText').textContent = 'Tap to ask a question';
+                document.getElementById('voiceText').textContent = 'Say "Hey ClearPath" or tap to ask';
+            };
+
+            // Wake word recognition
+            wakeWordRecognition = new webkitSpeechRecognition();
+            wakeWordRecognition.continuous = true;
+            wakeWordRecognition.interimResults = true;
+            wakeWordRecognition.lang = 'en-US';
+
+            wakeWordRecognition.onresult = function(event) {
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript.toLowerCase();
+                    
+                    if (transcript.includes('hey clearpath') || 
+                        transcript.includes('clearpath') || 
+                        transcript.includes('clear path')) {
+                        
+                        speak("Yes, how can I help you?");
+                        
+                        // Switch to question mode
+                        setTimeout(() => {
+                            if (!isListening) {
+                                toggleVoice();
+                            }
+                        }, 2000);
+                    }
+                }
+            };
+
+            wakeWordRecognition.onerror = function(event) {
+                if (event.error === 'no-speech') {
+                    // Restart if no speech detected
+                    if (wakeWordListening) {
+                        setTimeout(() => {
+                            try {
+                                wakeWordRecognition.start();
+                            } catch(e) {}
+                        }, 1000);
+                    }
+                }
+            };
+
+            wakeWordRecognition.onend = function() {
+                if (wakeWordListening) {
+                    setTimeout(() => {
+                        try {
+                            wakeWordRecognition.start();
+                        } catch(e) {}
+                    }, 500);
+                }
             };
         }
 
@@ -669,10 +781,224 @@
             loadContacts();
             displayContacts();
             updateFamilyScreen();
+            loadReminders();
+            displayReminders();
+            initializeVoices();
+            
+            // Start wake word listening
+            const wakeWordEnabled = localStorage.getItem('wakeWordEnabled');
+            if (wakeWordEnabled === null || wakeWordEnabled === 'true') {
+                startWakeWordListening();
+            }
         });
 
+        function initializeVoices() {
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = updateVoice;
+            }
+            updateVoice();
+        }
+
+        function updateVoice() {
+            const voices = speechSynthesis.getVoices();
+            const gender = document.querySelector('input[name="voiceGender"]:checked')?.value || 'female';
+            speechRate = parseFloat(document.getElementById('voiceSpeed')?.value || 1.3);
+            
+            // Find appropriate voice
+            let selectedVoice = null;
+            if (gender === 'female') {
+                selectedVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Victoria'));
+            } else {
+                selectedVoice = voices.find(v => v.name.includes('Male') || v.name.includes('Daniel') || v.name.includes('Alex'));
+            }
+            
+            currentVoice = selectedVoice || voices[0];
+            
+            // Save settings
+            localStorage.setItem('voiceGender', gender);
+            localStorage.setItem('voiceSpeed', speechRate);
+        }
+
+        function speak(text) {
+            if (!ttsEnabled || !text) return;
+            
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (currentVoice) {
+                utterance.voice = currentVoice;
+            }
+            utterance.rate = speechRate;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        function toggleTTS() {
+            ttsEnabled = document.getElementById('ttsEnabled').checked;
+            localStorage.setItem('ttsEnabled', ttsEnabled);
+        }
+
+        function testVoice() {
+            const userName = localStorage.getItem('userName') || 'there';
+            speak(`Hello ${userName}, this is ClearPath AI. I'm here to help you with anything you need.`);
+        }
+
+        function startWakeWordListening() {
+            if (!wakeWordRecognition || wakeWordListening) return;
+            
+            try {
+                wakeWordListening = true;
+                wakeWordRecognition.start();
+                console.log('Wake word listening started');
+            } catch(e) {
+                console.error('Wake word error:', e);
+            }
+        }
+
+        function stopWakeWordListening() {
+            if (!wakeWordRecognition || !wakeWordListening) return;
+            
+            wakeWordListening = false;
+            try {
+                wakeWordRecognition.stop();
+            } catch(e) {}
+        }
+
+        function toggleWakeWord() {
+            const enabled = document.getElementById('wakeWordEnabled').checked;
+            localStorage.setItem('wakeWordEnabled', enabled);
+            
+            if (enabled) {
+                startWakeWordListening();
+            } else {
+                stopWakeWordListening();
+            }
+        }
+
+        // Reminders functionality
+        function loadReminders() {
+            const saved = localStorage.getItem('reminders');
+            if (saved) {
+                reminders = JSON.parse(saved);
+            } else {
+                reminders = [];
+            }
+        }
+
+        function saveReminders() {
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            displayReminders();
+            checkUpcomingReminders();
+        }
+
+        function addReminder() {
+            const title = document.getElementById('newReminderTitle').value.trim();
+            const time = document.getElementById('newReminderTime').value;
+            
+            if (!title || !time) {
+                alert('Please enter both a title and time for the reminder');
+                return;
+            }
+            
+            reminders.push({
+                id: Date.now(),
+                title: title,
+                time: time,
+                completed: false
+            });
+            
+            saveReminders();
+            
+            document.getElementById('newReminderTitle').value = '';
+            document.getElementById('newReminderTime').value = '';
+            
+            speak(`Reminder added: ${title}`);
+            alert('Reminder added!');
+        }
+
+        function displayReminders() {
+            const list = document.getElementById('remindersList');
+            if (!list) return;
+            
+            // Sort by time
+            const sortedReminders = [...reminders].sort((a, b) => new Date(a.time) - new Date(b.time));
+            
+            if (sortedReminders.length === 0) {
+                list.innerHTML = '<p style="color: #6c757d; font-size: 16px; text-align: center; padding: 20px;">No reminders yet. Add one above!</p>';
+                return;
+            }
+            
+            list.innerHTML = sortedReminders.map((reminder, index) => {
+                const realIndex = reminders.findIndex(r => r.id === reminder.id);
+                const reminderTime = new Date(reminder.time);
+                const now = new Date();
+                const isPast = reminderTime < now;
+                const timeString = reminderTime.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="reminder-card ${reminder.completed ? 'completed' : ''}">
+                        <div class="reminder-title">${reminder.title}</div>
+                        <div class="reminder-time">${timeString} ${isPast && !reminder.completed ? '(Overdue)' : ''}</div>
+                        <div class="reminder-actions">
+                            ${!reminder.completed ? `<button class="reminder-done" onclick="markReminderDone(${realIndex})">✓ Mark as Done</button>` : '<span style="color: #28a745; font-weight: 600;">✓ Completed</span>'}
+                            <button class="reminder-delete" onclick="deleteReminder(${realIndex})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function markReminderDone(index) {
+            reminders[index].completed = true;
+            saveReminders();
+            speak('Reminder marked as complete');
+        }
+
+        function deleteReminder(index) {
+            if (confirm('Delete this reminder?')) {
+                reminders.splice(index, 1);
+                saveReminders();
+            }
+        }
+
+        function checkUpcomingReminders() {
+            const now = new Date();
+            const soon = new Date(now.getTime() + 5 * 60000); // 5 minutes from now
+            
+            reminders.forEach(reminder => {
+                if (reminder.completed) return;
+                
+                const reminderTime = new Date(reminder.time);
+                if (reminderTime <= soon && reminderTime > now) {
+                    // Reminder is coming up
+                    if (Notification.permission === 'granted') {
+                        new Notification('ClearPath Reminder', {
+                            body: reminder.title,
+                            icon: '🔔'
+                        });
+                    }
+                    speak(`Reminder: ${reminder.title}`);
+                }
+            });
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Check reminders every minute
+        setInterval(checkUpcomingReminders, 60000);
+
         function loadSettings() {
-            // Load user name
             const savedName = localStorage.getItem('userName');
             if (savedName) {
                 document.getElementById('userName').textContent = savedName;
@@ -681,7 +1007,6 @@
                 }
             }
             
-            // Load voice settings
             const voiceGender = localStorage.getItem('voiceGender') || 'female';
             const genderRadio = document.querySelector(`input[name="voiceGender"][value="${voiceGender}"]`);
             if (genderRadio) genderRadio.checked = true;
@@ -689,6 +1014,17 @@
             const voiceSpeed = localStorage.getItem('voiceSpeed') || '1.3';
             if (document.getElementById('voiceSpeed')) {
                 document.getElementById('voiceSpeed').value = voiceSpeed;
+            }
+            
+            const savedTTS = localStorage.getItem('ttsEnabled');
+            ttsEnabled = savedTTS === null || savedTTS === 'true';
+            if (document.getElementById('ttsEnabled')) {
+                document.getElementById('ttsEnabled').checked = ttsEnabled;
+            }
+            
+            const savedWakeWord = localStorage.getItem('wakeWordEnabled');
+            if (document.getElementById('wakeWordEnabled')) {
+                document.getElementById('wakeWordEnabled').checked = savedWakeWord === null || savedWakeWord === 'true';
             }
         }
 
@@ -701,27 +1037,15 @@
             
             localStorage.setItem('userName', name);
             document.getElementById('userName').textContent = name;
+            speak(`Name saved! Hello ${name}`);
             alert('Name saved! The app will now greet you by name.');
         }
 
-        function saveVoiceSettings() {
-            const genderInput = document.querySelector('input[name="voiceGender"]:checked');
-            const gender = genderInput ? genderInput.value : 'female';
-            const speed = document.getElementById('voiceSpeed').value;
-            
-            localStorage.setItem('voiceGender', gender);
-            localStorage.setItem('voiceSpeed', speed);
-            
-            alert('Voice settings saved!');
-        }
-
-        // Contact Management
         function loadContacts() {
             const saved = localStorage.getItem('familyContacts');
             if (saved) {
                 familyContacts = JSON.parse(saved);
             } else {
-                // Default contacts
                 familyContacts = [
                     { name: 'Sarah', relation: 'Daughter', phone: '' },
                     { name: 'Michael', relation: 'Son', phone: '' },
@@ -749,11 +1073,11 @@
             familyContacts.push({ name, relation, phone });
             saveContacts();
             
-            // Clear inputs
             document.getElementById('newContactName').value = '';
             document.getElementById('newContactRelation').value = '';
             document.getElementById('newContactPhone').value = '';
             
+            speak(`Contact added: ${name}`);
             alert('Contact added!');
         }
 
@@ -783,6 +1107,7 @@
             familyContacts[editingContactIndex] = { name, relation, phone };
             saveContacts();
             
+            speak('Contact updated');
             alert('Contact updated!');
             showScreen('settingsScreen');
         }
@@ -791,8 +1116,10 @@
             if (editingContactIndex === -1) return;
             
             if (confirm('Delete this contact?')) {
+                const name = familyContacts[editingContactIndex].name;
                 familyContacts.splice(editingContactIndex, 1);
                 saveContacts();
+                speak(`${name} deleted`);
                 showScreen('settingsScreen');
             }
         }
@@ -843,12 +1170,14 @@
 
         function callFamily(name, phone) {
             if (!phone) {
+                speak(`No phone number saved for ${name}`);
                 alert(`No phone number saved for ${name}. Please add one in Settings.`);
                 showScreen('settingsScreen');
                 return;
             }
             
             if (confirm(`Call ${name}?`)) {
+                speak(`Calling ${name}`);
                 window.location.href = `tel:${phone}`;
             }
         }
@@ -872,6 +1201,7 @@
                 
                 document.querySelector('.upload-label').style.display = 'none';
                 
+                speak('Analyzing your document');
                 analyzeImage(currentImageData);
             };
             reader.readAsDataURL(file);
@@ -895,6 +1225,9 @@
                 const data = await response.json();
                 const aiResponse = data.response || 'I had trouble reading this document.';
 
+                // Speak the response
+                speak(aiResponse.replace(/<[^>]*>/g, ''));
+
                 resultDiv.innerHTML = `
                     <div style="margin-bottom: 20px;">
                         <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
@@ -914,6 +1247,7 @@
                 `;
             } catch (error) {
                 console.error('API Error:', error);
+                speak('I had trouble analyzing this document');
                 resultDiv.innerHTML = `
                     <div class="result-card">
                         <div class="result-title">Something went wrong</div>
@@ -937,6 +1271,7 @@
             detailDiv.innerHTML = '<div class="loading">Getting more details...</div>';
             
             showScreen('explainMoreScreen');
+            speak('Getting more details about the document');
 
             try {
                 const response = await fetch('/api/analyze-image', {
@@ -953,9 +1288,11 @@
                 const data = await response.json();
                 const aiResponse = data.response || 'I had trouble providing more details.';
 
+                speak(aiResponse.replace(/<[^>]*>/g, ''));
                 detailDiv.innerHTML = aiResponse.replace(/\n/g, '<br><br>');
             } catch (error) {
                 console.error('API Error:', error);
+                speak('I had trouble getting more details');
                 detailDiv.innerHTML = 'I\'m having trouble getting more details right now. Please try again or call a family member for help.';
             }
         }
@@ -966,11 +1303,6 @@
             document.querySelector('.upload-label').style.display = 'inline-block';
             currentImageData = null;
             showScreen('homeScreen');
-        }
-
-        function askFollowUp() {
-            showScreen('voiceScreen');
-            addMessage("I have a question about the document I just scanned", 'user');
         }
 
         function toggleVoice() {
@@ -986,6 +1318,14 @@
                 isListening = true;
                 document.getElementById('micButton').classList.add('listening');
                 document.getElementById('voiceText').textContent = 'Listening...';
+                
+                // Temporarily stop wake word listening
+                if (wakeWordListening) {
+                    stopWakeWordListening();
+                    setTimeout(() => {
+                        if (!isListening) startWakeWordListening();
+                    }, 5000);
+                }
             }
         }
 
@@ -1039,21 +1379,16 @@
 
                 loadingDiv.remove();
                 addMessage(aiResponse, 'ai');
+                
+                // Speak the response
+                speak(aiResponse);
             } catch (error) {
                 console.error('API Error:', error);
                 loadingDiv.remove();
-                addMessage('I\'m having trouble right now. Can you try asking again, or would you like to call someone for help?', 'ai');
+                const errorMsg = 'I\'m having trouble right now. Can you try asking again, or would you like to call someone for help?';
+                addMessage(errorMsg, 'ai');
+                speak(errorMsg);
             }
-        }
-
-        function markReminderDone(button) {
-            const card = button.closest('.reminder-card');
-            card.style.opacity = '0.5';
-            button.textContent = '✓ Done';
-            button.disabled = true;
-            button.style.background = '#28a745';
-            button.style.color = 'white';
-            button.style.cursor = 'default';
         }
     </script>
 </body>
