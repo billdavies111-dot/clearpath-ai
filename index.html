@@ -278,6 +278,7 @@
         .btn-delete:hover {
             background: #c82333 !important;
             border-color: #bd2130 !important;
+            color: white !important;
         }
 
         textarea {
@@ -433,7 +434,7 @@
         }
 
         .reminder-card.completed {
-            opacity: 0.5;
+            opacity: 0.6;
             border-left-color: #28a745;
         }
 
@@ -484,6 +485,30 @@
         .reminder-delete:hover {
             background: #dc3545;
             color: white;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
         }
 
         @media (max-width: 600px) {
@@ -580,6 +605,13 @@
                     <input type="text" id="newReminderTitle" placeholder="What do you need to remember?">
                     <input type="datetime-local" id="newReminderTime">
                     <button class="btn" style="padding: 12px;" onclick="addReminder()">Add Reminder</button>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterReminders('all')" id="filterAll">All</button>
+                    <button class="filter-btn" onclick="filterReminders('active')" id="filterActive">Active</button>
+                    <button class="filter-btn" onclick="filterReminders('completed')" id="filterCompleted">Completed</button>
                 </div>
 
                 <!-- Reminders List -->
@@ -696,6 +728,7 @@
         let wakeWordRecognition = null;
         let familyContacts = [];
         let reminders = [];
+        let reminderFilter = 'all';
         let editingContactIndex = -1;
         let currentImageData = null;
         
@@ -919,15 +952,33 @@
             alert('Reminder added!');
         }
 
+        function filterReminders(filter) {
+            reminderFilter = filter;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter${filter.charAt(0).toUpperCase() + filter.slice(1)}`).classList.add('active');
+            
+            displayReminders();
+        }
+
         function displayReminders() {
             const list = document.getElementById('remindersList');
             if (!list) return;
             
+            // Filter reminders
+            let filteredReminders = reminders;
+            if (reminderFilter === 'active') {
+                filteredReminders = reminders.filter(r => !r.completed);
+            } else if (reminderFilter === 'completed') {
+                filteredReminders = reminders.filter(r => r.completed);
+            }
+            
             // Sort by time
-            const sortedReminders = [...reminders].sort((a, b) => new Date(a.time) - new Date(b.time));
+            const sortedReminders = [...filteredReminders].sort((a, b) => new Date(a.time) - new Date(b.time));
             
             if (sortedReminders.length === 0) {
-                list.innerHTML = '<p style="color: #6c757d; font-size: 16px; text-align: center; padding: 20px;">No reminders yet. Add one above!</p>';
+                list.innerHTML = '<p style="color: #6c757d; font-size: 16px; text-align: center; padding: 20px;">No reminders in this category.</p>';
                 return;
             }
             
@@ -948,7 +999,7 @@
                         <div class="reminder-title">${reminder.title}</div>
                         <div class="reminder-time">${timeString} ${isPast && !reminder.completed ? '(Overdue)' : ''}</div>
                         <div class="reminder-actions">
-                            ${!reminder.completed ? `<button class="reminder-done" onclick="markReminderDone(${realIndex})">✓ Mark as Done</button>` : '<span style="color: #28a745; font-weight: 600;">✓ Completed</span>'}
+                            ${!reminder.completed ? `<button class="reminder-done" onclick="markReminderDone(${realIndex})">✓ Done</button>` : '<span style="color: #28a745; font-weight: 600; padding: 8px;">✓ Completed</span>'}
                             <button class="reminder-delete" onclick="deleteReminder(${realIndex})">Delete</button>
                         </div>
                     </div>
@@ -966,6 +1017,7 @@
             if (confirm('Delete this reminder?')) {
                 reminders.splice(index, 1);
                 saveReminders();
+                speak('Reminder deleted');
             }
         }
 
@@ -1268,10 +1320,10 @@
             }
 
             const detailDiv = document.querySelector('#detailedExplanation > div');
-            detailDiv.innerHTML = '<div class="loading">Getting more details...</div>';
+            detailDiv.innerHTML = '<div class="loading">Getting detailed explanation...</div>';
             
             showScreen('explainMoreScreen');
-            speak('Getting more details about the document');
+            speak('Getting a more detailed explanation of the document');
 
             try {
                 const response = await fetch('/api/analyze-image', {
@@ -1288,7 +1340,7 @@
                 const data = await response.json();
                 const aiResponse = data.response || 'I had trouble providing more details.';
 
-                speak(aiResponse.replace(/<[^>]*>/g, ''));
+                speak(aiResponse.replace(/<[^>]*>/g, '').substring(0, 200));
                 detailDiv.innerHTML = aiResponse.replace(/\n/g, '<br><br>');
             } catch (error) {
                 console.error('API Error:', error);
