@@ -166,6 +166,27 @@
             background: #5568d3;
         }
 
+        .back-button-fixed {
+            position: sticky;
+            bottom: 0;
+            background: #667eea;
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 16px 24px;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 12px;
+            transition: all 0.2s;
+            margin-top: 20px;
+            z-index: 10;
+        }
+
+        .back-button-fixed:hover {
+            background: #5568d3;
+        }
+
         .camera-container {
             flex: 1;
             display: flex;
@@ -637,7 +658,6 @@
 
             <!-- Voice Screen -->
             <div class="screen" id="voiceScreen">
-                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
                 <div class="conversation" id="conversation"></div>
                 <div class="voice-container">
                     <button class="mic-button" id="micButton" onclick="toggleVoice()">🎤</button>
@@ -645,6 +665,7 @@
                 </div>
                 <textarea id="textInput" placeholder="Or type your question here..." style="margin-top: 20px;"></textarea>
                 <button class="btn" onclick="sendTextQuestion()">Send Question</button>
+                <button class="back-button-fixed" onclick="showScreen('homeScreen')">← Back to Home</button>
             </div>
 
             <!-- Family Screen -->
@@ -947,7 +968,6 @@
             // Make sure voices are loaded
             const voices = speechSynthesis.getVoices();
             if (voices.length === 0) {
-                // Voices not loaded yet, try again
                 setTimeout(() => {
                     updateVoice();
                     testVoice();
@@ -1526,13 +1546,17 @@
             conversation.appendChild(loadingDiv);
 
             try {
+                // Get user's name for personalization
+                const userName = localStorage.getItem('userName') || '';
+                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        messages: conversationHistory
+                        messages: conversationHistory,
+                        userName: userName
                     })
                 });
 
