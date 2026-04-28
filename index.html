@@ -188,87 +188,130 @@
             background: #5568d3;
         }
 
-        .instruction-box {
-            background: #e8f4fd;
-            border-left: 4px solid #2196F3;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
+        .help-link {
+            text-align: center;
+            margin-bottom: 20px;
         }
 
-        .instruction-title {
-            font-size: 20px;
+        .help-link button {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 8px;
+        }
+
+        .help-link button:hover {
+            color: #5568d3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #f0f0f0;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e0e0e0;
+        }
+
+        .modal-title {
+            font-size: 24px;
             font-weight: 700;
-            color: #1976D2;
+            color: #212529;
+            margin-bottom: 20px;
+            padding-right: 40px;
+        }
+
+        .help-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 16px;
         }
 
-        .instruction-steps {
+        .help-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-steps {
             list-style: none;
             counter-reset: step-counter;
         }
 
-        .instruction-steps li {
+        .help-steps li {
             counter-increment: step-counter;
             position: relative;
-            padding-left: 45px;
-            margin-bottom: 16px;
-            font-size: 18px;
+            padding-left: 35px;
+            margin-bottom: 12px;
+            font-size: 16px;
             line-height: 1.6;
             color: #212529;
         }
 
-        .instruction-steps li:before {
+        .help-steps li:before {
             content: counter(step-counter);
             position: absolute;
             left: 0;
             top: 0;
-            background: #2196F3;
+            background: #667eea;
             color: white;
-            width: 32px;
-            height: 32px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 16px;
-        }
-
-        .what-to-scan {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .what-to-scan-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #212529;
-            margin-bottom: 12px;
-        }
-
-        .what-to-scan ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .what-to-scan li {
-            padding: 12px;
-            margin-bottom: 8px;
-            background: white;
-            border-radius: 8px;
-            font-size: 17px;
-            line-height: 1.5;
-            border-left: 3px solid #667eea;
-        }
-
-        .what-to-scan li:before {
-            content: "✓ ";
-            color: #28a745;
-            font-weight: bold;
-            margin-right: 8px;
+            font-size: 14px;
         }
 
         .camera-container {
@@ -814,25 +857,8 @@
             <div class="screen" id="scanScreen">
                 <button class="back-button" onclick="resetScan()">← Back to Home</button>
                 
-                <div class="instruction-box">
-                    <div class="instruction-title">📸 How to Take a Picture</div>
-                    <ol class="instruction-steps">
-                        <li>Tap the big blue "Take Picture" button below</li>
-                        <li>Point your camera at the document or email on your screen</li>
-                        <li>Make sure the text is clear and readable</li>
-                        <li>Take the picture</li>
-                        <li>I'll check it for you right away!</li>
-                    </ol>
-                </div>
-
-                <div class="what-to-scan">
-                    <div class="what-to-scan-title">What can I check for you?</div>
-                    <ul>
-                        <li>Emails (take a picture of your email on the screen)</li>
-                        <li>Text messages</li>
-                        <li>Letters or bills in the mail</li>
-                        <li>Any document you're not sure about</li>
-                    </ul>
+                <div class="help-link">
+                    <button onclick="showHelpModal()">❓ What can I scan?</button>
                 </div>
 
                 <div class="camera-container">
@@ -995,6 +1021,42 @@
         </div>
     </div>
 
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeHelpModal()">×</button>
+            <div class="modal-title">What Can I Scan?</div>
+            
+            <div class="help-section">
+                <div class="help-section-title">📧 Emails</div>
+                <ol class="help-steps">
+                    <li>Open the email on your phone or computer screen</li>
+                    <li>Tap "Take Picture" and point at the screen</li>
+                    <li>Make sure the text is clear and readable</li>
+                </ol>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">💬 Text Messages</div>
+                <ol class="help-steps">
+                    <li>Open the text message conversation</li>
+                    <li>Take a screenshot (ask someone to show you how on your phone)</li>
+                    <li>Go to your Photos app and open the screenshot</li>
+                    <li>Tap "Take Picture" and point at the screenshot</li>
+                </ol>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">📄 Letters & Bills</div>
+                <ol class="help-steps">
+                    <li>Lay the document flat on a table</li>
+                    <li>Make sure there's good lighting</li>
+                    <li>Tap "Take Picture" and point at the document</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
     <script>
         let conversationHistory = [];
         let isListening = false;
@@ -1012,6 +1074,21 @@
         let speechSynthesis = window.speechSynthesis;
         let currentVoice = null;
         let speechRate = 1.0;
+
+        function showHelpModal() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeHelpModal();
+            }
+        });
 
         function stopSpeaking() {
             if (speechSynthesis.speaking) {
