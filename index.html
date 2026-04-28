@@ -109,8 +109,9 @@
             background: #f8f9fa;
             border: 2px solid #dee2e6;
             color: #495057;
-            padding: 20px;
-            font-size: 20px;
+            padding: 18px 12px;
+            font-size: 18px;
+            word-wrap: break-word;
         }
 
         .btn-secondary:hover {
@@ -327,30 +328,6 @@
             margin-top: 8px;
         }
 
-        .risk-indicator {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .risk-safe {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .risk-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .risk-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
         .action-buttons {
             display: flex;
             flex-direction: column;
@@ -436,10 +413,11 @@
         }
 
         .voice-text {
-            font-size: 20px;
+            font-size: 18px;
             color: #495057;
             text-align: center;
-            max-width: 300px;
+            max-width: 350px;
+            line-height: 1.5;
         }
 
         .conversation {
@@ -495,6 +473,24 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        .emergency-card {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .emergency-card:hover {
+            background: #ffe69c;
+            transform: scale(1.02);
         }
 
         .family-card {
@@ -696,7 +692,7 @@
                     </button>
                     <button class="btn" onclick="showScreen('voiceScreen')">
                         <span class="btn-icon">🎙️</span>
-                        <span>Ask a Question</span>
+                        <span>Ask Me Anything</span>
                     </button>
                 </div>
 
@@ -733,10 +729,9 @@
             <div class="screen" id="voiceScreen">
                 <div class="conversation" id="conversation"></div>
                 <div class="voice-container">
-                    <button class="mic-button" id="micButton" onclick="toggleVoice()">🎤</button>
-                    <div class="voice-text" id="voiceText">Say "Hey ClearPath" or tap to ask</div>
+                    <div class="voice-text">Type a question or use the Microphone control on your mobile device to activate a voice command. Start by tapping in the box below.</div>
                 </div>
-                <textarea id="textInput" placeholder="Or type your question here..." style="margin-top: 20px;"></textarea>
+                <textarea id="textInput" placeholder="Type your question here..."></textarea>
                 <button class="btn" onclick="sendTextQuestion()">Send Question</button>
                 <button class="back-button-fixed" onclick="goBackHome()">← Back to Home</button>
             </div>
@@ -745,7 +740,7 @@
             <div class="screen" id="familyScreen">
                 <button class="back-button" onclick="goBackHome()">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Call Family</h2>
-                <div class="family-list">
+                <div class="family-list" id="familyContactsList">
                     <!-- Will be populated dynamically -->
                 </div>
             </div>
@@ -796,8 +791,8 @@
                     <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 12px;">Voice Settings</label>
                     
                     <label style="display: block; margin-bottom: 12px;">
-                        <input type="checkbox" id="ttsEnabled" checked onchange="toggleTTS()"> 
-                        <span style="font-size: 16px;">Speak responses out loud</span>
+                        <input type="checkbox" id="voiceResponseEnabled" checked onchange="toggleVoiceResponse()"> 
+                        <span style="font-size: 16px;">Voice responses (speak answers out loud)</span>
                     </label>
                     
                     <label style="display: block; margin-bottom: 8px; font-size: 16px;">
@@ -901,25 +896,22 @@
         let currentImageData = null;
         
         // Text-to-Speech settings
-        let ttsEnabled = true;
+        let voiceResponseEnabled = true;
         let speechSynthesis = window.speechSynthesis;
         let currentVoice = null;
         let speechRate = 1.0;
 
-        // Stop speech function
         function stopSpeaking() {
             if (speechSynthesis.speaking) {
                 speechSynthesis.cancel();
             }
         }
 
-        // Modified goBackHome to stop speech
         function goBackHome() {
             stopSpeaking();
             showScreen('homeScreen');
         }
 
-        // Initialize speech recognition if available
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
             recognition.continuous = false;
@@ -934,8 +926,9 @@
 
             recognition.onend = function() {
                 isListening = false;
-                document.getElementById('micButton').classList.remove('listening');
-                document.getElementById('voiceText').textContent = 'Say "Hey ClearPath" or tap to ask';
+                if (document.getElementById('micButton')) {
+                    document.getElementById('micButton').classList.remove('listening');
+                }
             };
 
             wakeWordRecognition = new webkitSpeechRecognition();
@@ -955,7 +948,7 @@
                         
                         setTimeout(() => {
                             if (!isListening) {
-                                toggleVoice();
+                                showScreen('voiceScreen');
                             }
                         }, 2000);
                     }
@@ -1012,52 +1005,46 @@
             const gender = document.querySelector('input[name="voiceGender"]:checked')?.value || 'female';
             speechRate = parseFloat(document.getElementById('voiceSpeed')?.value || 1.0);
             
-            // Prioritize high-quality, natural-sounding voices
             let selectedVoice = null;
             
             if (gender === 'female') {
-                // Try to find premium/enhanced female voices first
+                // Prioritize warm, friendly female voices
                 selectedVoice = voices.find(v => 
-                    (v.name.includes('Samantha') || 
+                    (v.name.includes('Allison') || 
                      v.name.includes('Ava') || 
-                     v.name.includes('Allison') ||
-                     v.name.includes('Enhanced') ||
-                     v.name.includes('Premium')) && 
+                     v.name.includes('Joanna') ||
+                     v.name.includes('Kendra') ||
+                     v.name.includes('Salli')) && 
                     v.lang.startsWith('en')
                 );
                 
-                // Fallback to any English female voice
                 if (!selectedVoice) {
                     selectedVoice = voices.find(v => 
-                        (v.name.toLowerCase().includes('female') || 
-                         v.name.includes('Victoria') ||
+                        (v.name.includes('Samantha') ||
                          v.name.includes('Karen') ||
-                         v.name.includes('Moira')) && 
+                         v.name.includes('Victoria')) && 
                         v.lang.startsWith('en')
                     );
                 }
             } else {
-                // Try to find premium/enhanced male voices first
+                // Prioritize warm, friendly male voices
                 selectedVoice = voices.find(v => 
-                    (v.name.includes('Alex') || 
-                     v.name.includes('Daniel') || 
-                     v.name.includes('Tom') ||
-                     v.name.includes('Enhanced') ||
-                     v.name.includes('Premium')) && 
+                    (v.name.includes('Matthew') || 
+                     v.name.includes('Justin') || 
+                     v.name.includes('Joey') ||
+                     v.name.includes('Russell')) && 
                     v.lang.startsWith('en')
                 );
                 
-                // Fallback to any English male voice
                 if (!selectedVoice) {
                     selectedVoice = voices.find(v => 
-                        (v.name.toLowerCase().includes('male') || 
-                         v.name.includes('Fred')) && 
+                        (v.name.includes('Alex') ||
+                         v.name.includes('Daniel')) && 
                         v.lang.startsWith('en')
                     );
                 }
             }
             
-            // Final fallback to first available English voice
             if (!selectedVoice) {
                 selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
             }
@@ -1069,7 +1056,7 @@
         }
 
         function speak(text) {
-            if (!ttsEnabled || !text) return;
+            if (!voiceResponseEnabled || !text) return;
             
             speechSynthesis.cancel();
             
@@ -1084,9 +1071,9 @@
             speechSynthesis.speak(utterance);
         }
 
-        function toggleTTS() {
-            ttsEnabled = document.getElementById('ttsEnabled').checked;
-            localStorage.setItem('ttsEnabled', ttsEnabled);
+        function toggleVoiceResponse() {
+            voiceResponseEnabled = document.getElementById('voiceResponseEnabled').checked;
+            localStorage.setItem('voiceResponseEnabled', voiceResponseEnabled);
         }
 
         function testVoice() {
@@ -1330,10 +1317,10 @@
                 document.getElementById('voiceSpeed').value = voiceSpeed;
             }
             
-            const savedTTS = localStorage.getItem('ttsEnabled');
-            ttsEnabled = savedTTS === null || savedTTS === 'true';
-            if (document.getElementById('ttsEnabled')) {
-                document.getElementById('ttsEnabled').checked = ttsEnabled;
+            const savedVoiceResponse = localStorage.getItem('voiceResponseEnabled');
+            voiceResponseEnabled = savedVoiceResponse === null || savedVoiceResponse === 'true';
+            if (document.getElementById('voiceResponseEnabled')) {
+                document.getElementById('voiceResponseEnabled').checked = voiceResponseEnabled;
             }
             
             const savedWakeWord = localStorage.getItem('wakeWordEnabled');
@@ -1361,9 +1348,9 @@
                 familyContacts = JSON.parse(saved);
             } else {
                 familyContacts = [
+                    { name: 'Emergency', relation: '911', phone: '911' },
                     { name: 'Sarah', relation: 'Daughter', phone: '' },
-                    { name: 'Michael', relation: 'Son', phone: '' },
-                    { name: 'Emergency', relation: '911', phone: '911' }
+                    { name: 'Michael', relation: 'Son', phone: '' }
                 ];
             }
         }
@@ -1439,30 +1426,55 @@
             const list = document.getElementById('contactsList');
             if (!list) return;
             
-            if (familyContacts.length === 0) {
+            // Separate emergency from regular contacts
+            const regularContacts = familyContacts.filter(c => c.name !== 'Emergency');
+            
+            if (regularContacts.length === 0) {
                 list.innerHTML = '<p style="color: #6c757d; font-size: 16px;">No contacts yet. Add one below!</p>';
                 return;
             }
             
-            list.innerHTML = familyContacts.map((contact, index) => `
+            list.innerHTML = regularContacts.map((contact, arrayIndex) => {
+                const realIndex = familyContacts.findIndex(c => c.name === contact.name && c.phone === contact.phone);
+                return `
                 <div style="background: white; border: 2px solid #dee2e6; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="flex: 1;">
                         <div style="font-size: 18px; font-weight: 600; color: #212529;">${contact.name}</div>
                         <div style="font-size: 16px; color: #6c757d;">${contact.relation}</div>
                         <div style="font-size: 16px; color: #495057; margin-top: 4px;">${contact.phone}</div>
                     </div>
-                    <button onclick="editContact(${index})" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Edit</button>
+                    <button onclick="editContact(${realIndex})" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Edit</button>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function updateFamilyScreen() {
-            const familyList = document.querySelector('.family-list');
+            const familyList = document.getElementById('familyContactsList');
             if (!familyList) return;
             
-            familyList.innerHTML = familyContacts.map(contact => `
+            let html = '';
+            
+            // Emergency contact first
+            const emergency = familyContacts.find(c => c.name === 'Emergency');
+            if (emergency) {
+                html += `
+                    <div class="emergency-card" onclick="callFamily('${emergency.name}', '${emergency.phone}')">
+                        <span class="family-icon">🚨</span>
+                        <div class="family-info">
+                            <div class="family-name" style="font-size: 22px;">EMERGENCY</div>
+                            <div class="family-relation">${emergency.relation}</div>
+                        </div>
+                        <span style="font-size: 28px;">📞</span>
+                    </div>
+                `;
+            }
+            
+            // Regular contacts
+            const regularContacts = familyContacts.filter(c => c.name !== 'Emergency');
+            html += regularContacts.map(contact => `
                 <div class="family-card" onclick="callFamily('${contact.name}', '${contact.phone}')">
-                    <span class="family-icon">${contact.name === 'Emergency' ? '🚨' : (contact.relation.toLowerCase().includes('daughter') ? '👧' : '👦')}</span>
+                    <span class="family-icon">${contact.relation.toLowerCase().includes('daughter') ? '👧' : '👦'}</span>
                     <div class="family-info">
                         <div class="family-name">${contact.name}</div>
                         <div class="family-relation">${contact.relation}</div>
@@ -1470,6 +1482,8 @@
                     <span style="font-size: 24px;">📞</span>
                 </div>
             `).join('');
+            
+            familyList.innerHTML = html;
         }
 
         function callFamily(name, phone) {
@@ -1640,29 +1654,6 @@
             document.querySelector('.upload-label').style.display = 'inline-block';
             currentImageData = null;
             showScreen('homeScreen');
-        }
-
-        function toggleVoice() {
-            if (!recognition) {
-                alert('Voice recognition is not supported in this browser. Please type your question instead, or use Chrome/Safari for voice support.');
-                return;
-            }
-
-            if (isListening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                isListening = true;
-                document.getElementById('micButton').classList.add('listening');
-                document.getElementById('voiceText').textContent = 'Listening...';
-                
-                if (wakeWordListening) {
-                    stopWakeWordListening();
-                    setTimeout(() => {
-                        if (!isListening) startWakeWordListening();
-                    }, 5000);
-                }
-            }
         }
 
         async function sendTextQuestion() {
