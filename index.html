@@ -672,6 +672,34 @@
             background: #dc3545;
         }
 
+        .email-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .email-card:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .email-snippet {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.4;
+            margin-top: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
         @media (max-width: 600px) {
             .container {
                 border-radius: 0;
@@ -698,6 +726,10 @@
                     <button class="btn" onclick="showScreen('scanScreen')">
                         <span class="btn-icon">📷</span>
                         <span>Scan Something</span>
+                    </button>
+                    <button class="btn" onclick="checkEmails()">
+                        <span class="btn-icon">📧</span>
+                        <span>Check My Emails</span>
                     </button>
                     <button class="btn" onclick="showScreen('voiceScreen')">
                         <span class="btn-icon">🎙️</span>
@@ -732,6 +764,24 @@
                     </label>
                 </div>
                 <div id="scanResult"></div>
+            </div>
+
+            <!-- Email List Screen -->
+            <div class="screen" id="emailListScreen">
+                <button class="back-button" onclick="goBackHome()">← Back to Home</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Your Recent Emails</h2>
+                
+                <div id="emailList">
+                    <div class="loading">Loading your emails...</div>
+                </div>
+            </div>
+
+            <!-- Email Detail Screen -->
+            <div class="screen" id="emailDetailScreen">
+                <button class="back-button" onclick="showScreen('emailListScreen')">← Back to Emails</button>
+                <h2 style="font-size: 24px; margin-bottom: 20px;">Email Scan Results</h2>
+                
+                <div id="emailDetailContent"></div>
             </div>
 
             <!-- Voice Screen -->
@@ -895,6 +945,8 @@
         let reminderFilter = 'all';
         let editingContactIndex = -1;
         let currentImageData = null;
+        let currentEmails = [];
+        let currentEmailId = null;
         
         // Text-to-Speech settings
         let voiceResponseEnabled = true;
@@ -1149,7 +1201,6 @@
                 return;
             }
             
-            // Combine date and time if both provided, otherwise just date
             let dateTimeString = date;
             if (time) {
                 dateTimeString = `${date}T${time}`;
@@ -1335,17 +1386,14 @@
             const regularContacts = familyContacts.filter(c => c.name !== 'Emergency');
             const emergency = familyContacts.find(c => c.name === 'Emergency');
             
-            // Get the real index in regularContacts array
             const contact = regularContacts[index];
             const newIndex = index + direction;
             
             if (newIndex < 0 || newIndex >= regularContacts.length) return;
             
-            // Swap
             regularContacts[index] = regularContacts[newIndex];
             regularContacts[newIndex] = contact;
             
-            // Rebuild familyContacts with emergency first
             familyContacts = emergency ? [emergency, ...regularContacts] : regularContacts;
             
             saveContacts();
@@ -1498,6 +1546,198 @@
             document.getElementById(screenId).classList.add('active');
         }
 
+        async function checkEmails() {
+            showScreen('emailListScreen');
+            
+            const listDiv = document.getElementById('emailList');
+            listDiv.innerHTML = '<div class="loading">Loading your recent emails...</div>';
+            
+            speak('Loading your recent emails');
+            
+            try {
+                const response = await fetch('/api/get-emails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    speak('I had trouble loading your emails');
+                    listDiv.innerHTML = `
+                        <div class="result-card">
+                            <div class="result-title">Could not load emails</div>
+                            <div class="result-text">${data.error}</div>
+                            <div class="result-text" style="margin-top: 12px;">Make sure Gmail is connected in your account settings.</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                currentEmails = data.emails || [];
+                displayEmailList();
+                
+                speak(`You have ${currentEmails.length} recent emails`);
+            } catch (error) {
+                console.error('Error loading emails:', error);
+                speak('I had trouble loading your emails');
+                listDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">Something went wrong</div>
+                        <div class="result-text">I'm having trouble connecting to your email. Please try again.</div>
+                    </div>
+                    <button class="btn" style="margin-top: 16px;" onclick="checkEmails()">Try Again</button>
+                `;
+            }
+        }
+
+        function displayEmailList() {
+            const listDiv = document.getElementById('emailList');
+            
+            if (currentEmails.length === 0) {
+                listDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <p style="font-size: 18px;">No recent emails found.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            listDiv.innerHTML = currentEmails.map((email, index) => {
+                const snippet = email.snippet && email.snippet.length > 100 
+                    ? email.snippet.substring(0, 100) + '...' 
+                    : email.snippet || 'No preview available';
+                
+                return `
+                    <div class="email-card" onclick="scanEmail(${index})">
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #212529;">
+                            From: ${email.from || 'Unknown Sender'}
+                        </div>
+                        <div style="font-size: 17px; color: #495057; margin-bottom: 8px; font-weight: 500;">
+                            ${email.subject || '(No Subject)'}
+                        </div>
+                        <div class="email-snippet">
+                            ${snippet}
+                        </div>
+                        <div style="margin-top: 12px; font-size: 14px; color: #999;">
+                            ${email.date || ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function scanEmail(index) {
+            const email = currentEmails[index];
+            currentEmailId = email.id;
+            
+            showScreen('emailDetailScreen');
+            
+            const detailDiv = document.getElementById('emailDetailContent');
+            detailDiv.innerHTML = '<div class="loading">Scanning this email for scams...</div>';
+            
+            speak('Scanning this email for scams');
+            
+            try {
+                const response = await fetch('/api/analyze-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        emailId: email.id,
+                        from: email.from,
+                        subject: email.subject,
+                        snippet: email.snippet,
+                        body: email.body
+                    })
+                });
+                
+                const data = await response.json();
+                displayEmailScanResults(email, data);
+                
+            } catch (error) {
+                console.error('Error scanning email:', error);
+                speak('I had trouble scanning this email');
+                detailDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">Something went wrong</div>
+                        <div class="result-text">I'm having trouble analyzing this email. Please try again.</div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayEmailScanResults(email, data) {
+            const detailDiv = document.getElementById('emailDetailContent');
+            
+            const summary = data.summary || 'I analyzed this email.';
+            const scamScore = data.scamScore || 'PROBABLY NOT';
+            const redFlags = data.redFlags || 'None detected';
+            const safeAction = data.safeAction || 'This email appears safe';
+            const ifClicked = data.ifClicked || 'No immediate concerns';
+            
+            let scamClass = 'scam-score-safe';
+            let scamIcon = '✅';
+            if (scamScore === 'MAYBE') {
+                scamClass = 'scam-score-maybe';
+                scamIcon = '⚠️';
+            } else if (scamScore === 'PROBABLY') {
+                scamClass = 'scam-score-danger';
+                scamIcon = '🚨';
+            }
+            
+            speak(summary.replace(/<[^>]*>/g, ''));
+            
+            detailDiv.innerHTML = `
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <div style="font-size: 16px; font-weight: 600; color: #6c757d; margin-bottom: 8px;">FROM:</div>
+                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">${email.from || 'Unknown'}</div>
+                    
+                    <div style="font-size: 16px; font-weight: 600; color: #6c757d; margin-bottom: 8px;">SUBJECT:</div>
+                    <div style="font-size: 18px; margin-bottom: 16px;">${email.subject || '(No Subject)'}</div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 16px;">
+                        <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${summary.replace(/\n/g, '<br>')}</div>
+                    </div>
+                </div>
+
+                <div class="scam-detection-box">
+                    <div style="font-size: 20px; font-weight: 700; color: #212529; margin-bottom: 20px; text-align: center;">Safety Check</div>
+                    
+                    <div class="scam-score ${scamClass}">
+                        <span style="font-size: 28px;">${scamIcon}</span>
+                        <span>Scam Risk: ${scamScore}</span>
+                    </div>
+
+                    <div class="detection-item">
+                        <div class="detection-label">Warning Signs</div>
+                        <div class="detection-explanation">${redFlags}</div>
+                    </div>
+
+                    <div class="detection-item">
+                        <div class="detection-label">What Should I Do?</div>
+                        <div class="detection-value">${safeAction}</div>
+                    </div>
+
+                    <div class="detection-item">
+                        <div class="detection-label">What if I clicked a link?</div>
+                        <div class="detection-explanation">${ifClicked}</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-action" onclick="showScreen('emailListScreen')">← Back to Email List</button>
+                    <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
+                </div>
+            `;
+        }
+
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1547,7 +1787,6 @@
                     scamIcon = '🚨';
                 }
 
-                // Check if the document couldn't be read properly
                 const hadTroubleReading = summary.toLowerCase().includes('trouble') || 
                                          summary.toLowerCase().includes('unable') ||
                                          summary.toLowerCase().includes('cannot read') ||
