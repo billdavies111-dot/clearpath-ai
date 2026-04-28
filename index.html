@@ -234,6 +234,16 @@
             display: none;
         }
 
+        input[type="date"],
+        input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
         .result-card {
             background: #f8f9fa;
             border-radius: 12px;
@@ -384,34 +394,6 @@
             gap: 24px;
         }
 
-        .mic-button {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: #667eea;
-            border: none;
-            color: white;
-            font-size: 48px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-        }
-
-        .mic-button:hover {
-            background: #5568d3;
-            transform: scale(1.05);
-        }
-
-        .mic-button.listening {
-            background: #dc3545;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
         .voice-text {
             font-size: 18px;
             color: #495057;
@@ -503,11 +485,38 @@
             gap: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
         }
 
         .family-card:hover {
             background: #e9ecef;
             border-color: #667eea;
+        }
+
+        .reorder-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .reorder-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .reorder-btn:hover {
+            background: #5568d3;
+        }
+
+        .reorder-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
         .family-icon {
@@ -729,7 +738,7 @@
             <div class="screen" id="voiceScreen">
                 <div class="conversation" id="conversation"></div>
                 <div class="voice-container">
-                    <div class="voice-text">Type a question or use the Microphone control on your mobile device to activate a voice command. Start by tapping in the box below.</div>
+                    <div class="voice-text"><strong>Ask Me Anything</strong><br>Type a question or use the Microphone control on your mobile device to activate a voice command. Start by tapping in the box below.</div>
                 </div>
                 <textarea id="textInput" placeholder="Type your question here..."></textarea>
                 <button class="btn" onclick="sendTextQuestion()">Send Question</button>
@@ -765,8 +774,10 @@
                 <div class="expandable-form" id="reminderForm">
                     <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">New Reminder</h3>
                     <input type="text" id="newReminderTitle" placeholder="What do you need to remember?">
+                    <label style="font-size: 14px; color: #6c757d; display: block; margin-bottom: 8px;">Date (required)</label>
+                    <input type="date" id="newReminderDate">
                     <label style="font-size: 14px; color: #6c757d; display: block; margin-bottom: 8px;">Time (optional)</label>
-                    <input type="datetime-local" id="newReminderTime">
+                    <input type="time" id="newReminderTime">
                     <div style="display: flex; gap: 12px;">
                         <button class="btn" style="padding: 12px; flex: 1;" onclick="addReminder()">Save Reminder</button>
                         <button class="btn" style="padding: 12px; background: #6c757d; border-color: #6c757d;" onclick="toggleReminderForm()">Cancel</button>
@@ -810,16 +821,6 @@
                     </select>
                     
                     <button class="btn" style="margin-top: 12px; padding: 12px;" onclick="testVoice()">Test Voice</button>
-                </div>
-
-                <!-- Wake Word Settings -->
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                    <label style="font-size: 18px; font-weight: 600; display: block; margin-bottom: 12px;">Wake Word</label>
-                    <label style="display: block; margin-bottom: 12px;">
-                        <input type="checkbox" id="wakeWordEnabled" checked onchange="toggleWakeWord()"> 
-                        <span style="font-size: 16px;">Listen for "Hey ClearPath"</span>
-                    </label>
-                    <p style="font-size: 14px; color: #6c757d;">When enabled, ClearPath will listen for its name and respond automatically.</p>
                 </div>
 
                 <!-- Family Contacts -->
@@ -926,9 +927,6 @@
 
             recognition.onend = function() {
                 isListening = false;
-                if (document.getElementById('micButton')) {
-                    document.getElementById('micButton').classList.remove('listening');
-                }
             };
 
             wakeWordRecognition = new webkitSpeechRecognition();
@@ -986,11 +984,6 @@
             loadReminders();
             displayReminders();
             initializeVoices();
-            
-            const wakeWordEnabled = localStorage.getItem('wakeWordEnabled');
-            if (wakeWordEnabled === null || wakeWordEnabled === 'true') {
-                startWakeWordListening();
-            }
         });
 
         function initializeVoices() {
@@ -1008,7 +1001,6 @@
             let selectedVoice = null;
             
             if (gender === 'female') {
-                // Prioritize warm, friendly female voices
                 selectedVoice = voices.find(v => 
                     (v.name.includes('Allison') || 
                      v.name.includes('Ava') || 
@@ -1027,7 +1019,6 @@
                     );
                 }
             } else {
-                // Prioritize warm, friendly male voices
                 selectedVoice = voices.find(v => 
                     (v.name.includes('Matthew') || 
                      v.name.includes('Justin') || 
@@ -1092,38 +1083,6 @@
             speak(testText);
         }
 
-        function startWakeWordListening() {
-            if (!wakeWordRecognition || wakeWordListening) return;
-            
-            try {
-                wakeWordListening = true;
-                wakeWordRecognition.start();
-                console.log('Wake word listening started');
-            } catch(e) {
-                console.error('Wake word error:', e);
-            }
-        }
-
-        function stopWakeWordListening() {
-            if (!wakeWordRecognition || !wakeWordListening) return;
-            
-            wakeWordListening = false;
-            try {
-                wakeWordRecognition.stop();
-            } catch(e) {}
-        }
-
-        function toggleWakeWord() {
-            const enabled = document.getElementById('wakeWordEnabled').checked;
-            localStorage.setItem('wakeWordEnabled', enabled);
-            
-            if (enabled) {
-                startWakeWordListening();
-            } else {
-                stopWakeWordListening();
-            }
-        }
-
         function toggleReminderForm() {
             const form = document.getElementById('reminderForm');
             const btn = document.getElementById('addReminderBtn');
@@ -1133,6 +1092,7 @@
                 btn.textContent = '+ Add Reminder';
                 btn.classList.remove('expanded');
                 document.getElementById('newReminderTitle').value = '';
+                document.getElementById('newReminderDate').value = '';
                 document.getElementById('newReminderTime').value = '';
             } else {
                 form.classList.add('expanded');
@@ -1176,6 +1136,7 @@
 
         function addReminder() {
             const title = document.getElementById('newReminderTitle').value.trim();
+            const date = document.getElementById('newReminderDate').value;
             const time = document.getElementById('newReminderTime').value;
             
             if (!title) {
@@ -1183,10 +1144,22 @@
                 return;
             }
             
+            if (!date) {
+                alert('Please select a date for the reminder');
+                return;
+            }
+            
+            // Combine date and time if both provided, otherwise just date
+            let dateTimeString = date;
+            if (time) {
+                dateTimeString = `${date}T${time}`;
+            }
+            
             reminders.push({
                 id: Date.now(),
                 title: title,
-                time: time || null,
+                datetime: dateTimeString,
+                hasTime: !!time,
                 completed: false
             });
             
@@ -1218,10 +1191,7 @@
             }
             
             const sortedReminders = [...filteredReminders].sort((a, b) => {
-                if (!a.time && !b.time) return 0;
-                if (!a.time) return 1;
-                if (!b.time) return -1;
-                return new Date(a.time) - new Date(b.time);
+                return new Date(a.datetime) - new Date(b.datetime);
             });
             
             if (sortedReminders.length === 0) {
@@ -1231,25 +1201,30 @@
             
             list.innerHTML = sortedReminders.map((reminder, index) => {
                 const realIndex = reminders.findIndex(r => r.id === reminder.id);
-                let timeString = 'No specific time';
-                let isPast = false;
+                const reminderDate = new Date(reminder.datetime);
+                const now = new Date();
+                const isPast = reminderDate < now;
                 
-                if (reminder.time) {
-                    const reminderTime = new Date(reminder.time);
-                    const now = new Date();
-                    isPast = reminderTime < now;
-                    timeString = reminderTime.toLocaleString('en-US', {
+                let timeString;
+                if (reminder.hasTime) {
+                    timeString = reminderDate.toLocaleString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         hour: 'numeric',
                         minute: '2-digit'
+                    });
+                } else {
+                    timeString = reminderDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
                     });
                 }
                 
                 return `
                     <div class="reminder-card ${reminder.completed ? 'completed' : ''}">
                         <div class="reminder-title">${reminder.title}</div>
-                        <div class="reminder-time">${timeString} ${isPast && !reminder.completed && reminder.time ? '(Overdue)' : ''}</div>
+                        <div class="reminder-time">${timeString} ${isPast && !reminder.completed ? '(Overdue)' : ''}</div>
                         <div class="reminder-actions">
                             ${!reminder.completed ? `<button class="reminder-done" onclick="markReminderDone(${realIndex})">✓ Done</button>` : '<span style="color: #28a745; font-weight: 600; padding: 8px;">✓ Completed</span>'}
                             <button class="reminder-delete" onclick="deleteReminder(${realIndex})">Delete</button>
@@ -1278,9 +1253,9 @@
             const soon = new Date(now.getTime() + 5 * 60000);
             
             reminders.forEach(reminder => {
-                if (reminder.completed || !reminder.time) return;
+                if (reminder.completed || !reminder.hasTime) return;
                 
-                const reminderTime = new Date(reminder.time);
+                const reminderTime = new Date(reminder.datetime);
                 if (reminderTime <= soon && reminderTime > now) {
                     if (Notification.permission === 'granted') {
                         new Notification('ClearPath Reminder', {
@@ -1322,11 +1297,6 @@
             if (document.getElementById('voiceResponseEnabled')) {
                 document.getElementById('voiceResponseEnabled').checked = voiceResponseEnabled;
             }
-            
-            const savedWakeWord = localStorage.getItem('wakeWordEnabled');
-            if (document.getElementById('wakeWordEnabled')) {
-                document.getElementById('wakeWordEnabled').checked = savedWakeWord === null || savedWakeWord === 'true';
-            }
         }
 
         function saveName() {
@@ -1359,6 +1329,26 @@
             localStorage.setItem('familyContacts', JSON.stringify(familyContacts));
             displayContacts();
             updateFamilyScreen();
+        }
+
+        function moveContact(index, direction) {
+            const regularContacts = familyContacts.filter(c => c.name !== 'Emergency');
+            const emergency = familyContacts.find(c => c.name === 'Emergency');
+            
+            // Get the real index in regularContacts array
+            const contact = regularContacts[index];
+            const newIndex = index + direction;
+            
+            if (newIndex < 0 || newIndex >= regularContacts.length) return;
+            
+            // Swap
+            regularContacts[index] = regularContacts[newIndex];
+            regularContacts[newIndex] = contact;
+            
+            // Rebuild familyContacts with emergency first
+            familyContacts = emergency ? [emergency, ...regularContacts] : regularContacts;
+            
+            saveContacts();
         }
 
         function addContact() {
@@ -1426,7 +1416,6 @@
             const list = document.getElementById('contactsList');
             if (!list) return;
             
-            // Separate emergency from regular contacts
             const regularContacts = familyContacts.filter(c => c.name !== 'Emergency');
             
             if (regularContacts.length === 0) {
@@ -1438,7 +1427,11 @@
                 const realIndex = familyContacts.findIndex(c => c.name === contact.name && c.phone === contact.phone);
                 return `
                 <div style="background: white; border: 2px solid #dee2e6; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="flex: 1;">
+                    <div class="reorder-buttons">
+                        <button class="reorder-btn" onclick="moveContact(${arrayIndex}, -1)" ${arrayIndex === 0 ? 'disabled' : ''}>▲</button>
+                        <button class="reorder-btn" onclick="moveContact(${arrayIndex}, 1)" ${arrayIndex === regularContacts.length - 1 ? 'disabled' : ''}>▼</button>
+                    </div>
+                    <div style="flex: 1; padding: 0 12px;">
                         <div style="font-size: 18px; font-weight: 600; color: #212529;">${contact.name}</div>
                         <div style="font-size: 16px; color: #6c757d;">${contact.relation}</div>
                         <div style="font-size: 16px; color: #495057; margin-top: 4px;">${contact.phone}</div>
@@ -1455,7 +1448,6 @@
             
             let html = '';
             
-            // Emergency contact first
             const emergency = familyContacts.find(c => c.name === 'Emergency');
             if (emergency) {
                 html += `
@@ -1470,7 +1462,6 @@
                 `;
             }
             
-            // Regular contacts
             const regularContacts = familyContacts.filter(c => c.name !== 'Emergency');
             html += regularContacts.map(contact => `
                 <div class="family-card" onclick="callFamily('${contact.name}', '${contact.phone}')">
@@ -1556,13 +1547,24 @@
                     scamIcon = '🚨';
                 }
 
+                // Check if the document couldn't be read properly
+                const hadTroubleReading = summary.toLowerCase().includes('trouble') || 
+                                         summary.toLowerCase().includes('unable') ||
+                                         summary.toLowerCase().includes('cannot read') ||
+                                         summary.toLowerCase().includes('unclear');
+
                 speak(summary.replace(/<[^>]*>/g, ''));
+
+                let explainMoreText = hadTroubleReading ? 
+                    '❓ Explain more (try again with better image)' : 
+                    '❓ Explain more';
 
                 resultDiv.innerHTML = `
                     <div style="margin-bottom: 20px;">
                         <div style="font-size: 20px; font-weight: 600; color: #212529; margin-bottom: 16px;">Here's what I found:</div>
                         <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin-bottom: 16px;">
                             <div style="font-size: 22px; line-height: 1.5; color: #212529; font-weight: 500;">${summary.replace(/\n/g, '<br>')}</div>
+                            ${hadTroubleReading ? '<div style="margin-top: 16px; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 16px; color: #856404;"><strong>Tip:</strong> Try clicking "Explain more" below for a more detailed analysis, or retake the photo with better lighting.</div>' : ''}
                         </div>
                     </div>
 
@@ -1588,7 +1590,7 @@
                     <div class="action-buttons">
                         <button class="btn btn-action" onclick="resetScan()">✓ I understand</button>
                         <button class="btn btn-action" onclick="showScreen('familyScreen')">📞 Call someone about this</button>
-                        <button class="btn btn-action" onclick="explainMore()">❓ Explain more</button>
+                        <button class="btn btn-action" onclick="explainMore()">${explainMoreText}</button>
                     </div>
                 `;
             } catch (error) {
