@@ -53,10 +53,10 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Image analysis endpoint
+// Image analysis endpoint (documents, emails, screenshots)
 app.post('/api/analyze-image', async (req, res) => {
   try {
-    const { image, detailed } = req.body;
+    const { image, scanType, detailed } = req.body;
     
     let mediaType = 'image/jpeg';
     if (image.startsWith('iVBORw0KGgo')) {
@@ -70,8 +70,8 @@ app.post('/api/analyze-image', async (req, res) => {
     }
 
     const prompt = detailed 
-      ? 'You are helping an elderly person understand this document in detail. Provide a comprehensive explanation (300-500 words) that includes:\n\n1. What type of document this is and its purpose\n2. All key information, numbers, dates, and details present\n3. What actions they need to take (if any) with specific deadlines\n4. Any important terms or conditions explained in simple language\n5. Whether there are any concerns or red flags\n6. Whether it appears legitimate and safe\n7. Additional context that would be helpful\n\nUse very simple, clear language. Be thorough but conversational. Break down complex terms. Organize your response in clear paragraphs.'
-      : `You are helping an elderly person understand this document or email. Analyze it for scam risk and provide a structured response.
+      ? 'You are helping an elderly person understand this document or message in detail. Provide a comprehensive explanation (300-500 words) that includes:\n\n1. What type of document or message this is and its purpose\n2. All key information, numbers, dates, and details present\n3. What actions they need to take (if any) with specific deadlines\n4. Any important terms or conditions explained in simple language\n5. Whether there are any concerns or red flags\n6. Whether it appears legitimate and safe\n7. Additional context that would be helpful\n\nUse very simple, clear language. Be thorough but conversational. Break down complex terms. Organize your response in clear paragraphs.'
+      : `You are helping an elderly person understand this ${scanType === 'screenshot' ? 'email or text message screenshot' : scanType === 'email' ? 'email' : 'document'}. Analyze it for scam risk and provide a structured response.
 
 Return your response in this EXACT format:
 
@@ -83,7 +83,7 @@ NEED_ACTION: [EXACTLY one of: "Yes" or "No" or "Soon"]
 
 IF_IGNORED: [1-2 sentences about what happens if they don't respond]
 
-Be direct. Use simple words. If this is an email, look extra carefully for phishing, urgent requests for money/passwords, fake sender addresses, and too-good-to-be-true offers.`;
+Be direct. Use simple words. If this is an email or text message, look extra carefully for phishing, urgent requests for money/passwords, fake sender addresses, and too-good-to-be-true offers.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -117,7 +117,7 @@ Be direct. Use simple words. If this is an email, look extra carefully for phish
 
     const data = await response.json();
     console.log('Full API response:', JSON.stringify(data, null, 2));
-    const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this document.';
+    const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble reading this.';
 
     if (detailed) {
       res.json({ response: aiResponse });
@@ -150,6 +150,64 @@ Be direct. Use simple words. If this is an email, look extra carefully for phish
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Failed to analyze image' });
+  }
+});
+
+// Photo identification endpoint
+app.post('/api/analyze-photo', async (req, res) => {
+  try {
+    const { image } = req.body;
+    
+    let mediaType = 'image/jpeg';
+    if (image.startsWith('iVBORw0KGgo')) {
+      mediaType = 'image/png';
+    } else if (image.startsWith('/9j/')) {
+      mediaType = 'image/jpeg';
+    } else if (image.startsWith('R0lGOD')) {
+      mediaType = 'image/gif';
+    } else if (image.startsWith('UklGR')) {
+      mediaType = 'image/webp';
+    }
+
+    const prompt = 'You are helping an elderly person identify what is in this photo. Provide a brief, friendly description (2-4 sentences) of what you see. Be specific but concise. Use simple language.';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: image
+              }
+            },
+            {
+              type: 'text',
+              text: prompt
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const aiResponse = data.content?.find(item => item.type === 'text')?.text || 'I had trouble identifying this.';
+
+    res.json({ description: aiResponse });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Failed to analyze photo' });
   }
 });
 
