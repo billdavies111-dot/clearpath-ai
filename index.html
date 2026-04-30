@@ -824,7 +824,7 @@
             <div class="screen" id="emailTextScreen">
                 <button class="back-button" onclick="goBackHome()">← Back to Home</button>
                 <h2 style="font-size: 24px; margin-bottom: 20px;">Check Email or Text Message for Fraud</h2>
-                <p> If the email is on your computer, click the button for email. If it is on your phone, click the button for Phone to receive further instructions</p>
+                <p> If the email is on your computer, click the "Email on Computer" button. If it is on your phone, click the "Email or Text on Phone" button</p>
                 <p style="margin-bottom: 20px;">
                 <div class="option-buttons">
                     <button class="option-btn" onclick="showEmailOption('computer')">📧 Email on <strong>Computer</strong></button>
@@ -857,12 +857,12 @@
                 
                 <div class="screenshot-guide">
                     <h3>📱 Check an Email or Text for Fraud</h3>
-                    <p> To check an email or text message on your phone to see if it is potentially fraudulent, take a screen shot of the message while it is visible on the screen, by following the instructions below.
+                    <p> Take a screen shot of the message while it is visible on the screen, by following the instructions below.
                     <ul style="margin-left: 40px;">
                         <li><strong>iPhone:</strong> Press Side Button + Volume Up at the same time</li>
                         <li><strong>Android:</strong> Press Power Button + Volume Down at the same time</li>
                     </ul>
-                    <p> The screenshot will save to your Photos. <br>Use the Select Screenshot button below to select it for fraud assessment.</p>
+                     <p style="margin-bottom: 20px;">The screenshot will save to your Photos. <br>Use the Select Screenshot button below to select it for fraud assessment.</p>
                 </div>
 
                 <div class="camera-container">
@@ -881,7 +881,7 @@
                 
                 <div class="instruction-box">
                     <div class="instruction-title">📸 Take a Photo</div>
-                    <div class="instruction-text">Point your camera at anything you'd like to know about - a plant, a car, an object, or anything else and use the button below to snap the photo!</div>
+                    <div class="instruction-text">Point your phone's camera at anything you'd like to know about - a plant, a car, an object, or anything else and use the button below to snap the photo!</div>
                 </div>
 
                 <div class="camera-container">
@@ -897,11 +897,25 @@
             <!-- Voice Screen -->
             <div class="screen" id="voiceScreen">
                 <div class="conversation" id="conversation"></div>
-                <div class="voice-container">
-                    <div class="voice-text"><strong>Ask Me Anything</strong><br>Type a question or use the Microphone control on your mobile device to activate a voice command. Start by tapping in the box below.</div>
+                
+                <!-- Initial state -->
+                <div id="initialPrompt">
+                    <div class="voice-container">
+                        <div class="voice-text"><strong>Ask Me Anything</strong><br>Type a question or use the Microphone control on your mobile device to activate a voice command. Start by tapping in the box below.</div>
+                    </div>
+                    <textarea id="textInput" placeholder="Tap here to start..." onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendTextQuestion(); }"></textarea>
+                    <button class="btn" onclick="sendTextQuestion()">Send Question</button>
                 </div>
-                <textarea id="textInput" placeholder="Tap here to start..." onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendTextQuestion(); }"></textarea>
-                <button class="btn" onclick="sendTextQuestion()">Send Question</button>
+                
+                <!-- Follow-up state (hidden initially) -->
+                <div id="followUpPrompt" style="display: none;">
+                    <div class="voice-container">
+                        <div class="voice-text"><strong>Ask Another Question?</strong><br>Type your next question below.</div>
+                    </div>
+                    <textarea id="followUpInput" placeholder="Type your question..." onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendFollowUpQuestion(); }"></textarea>
+                    <button class="btn" onclick="sendFollowUpQuestion()">Send Question</button>
+                </div>
+                
                 <button class="back-button-fixed" onclick="goBackHome()">← Back to Home</button>
             </div>
 
@@ -1998,8 +2012,23 @@
                 alert('Please type a question first.');
                 return;
             }
-
             document.getElementById('textInput').value = '';
+            addMessage(question, 'user');
+            
+            // Hide initial prompt, show follow-up prompt
+            document.getElementById('initialPrompt').style.display = 'none';
+            document.getElementById('followUpPrompt').style.display = 'block';
+            
+            await getAIResponse(question);
+        }
+        
+        async function sendFollowUpQuestion() {
+            const question = document.getElementById('followUpInput').value.trim();
+            if (!question) {
+                alert('Please type a question first.');
+                return;
+            }
+            document.getElementById('followUpInput').value = '';
             addMessage(question, 'user');
             await getAIResponse(question);
         }
